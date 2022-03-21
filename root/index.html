@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="fullpage/fullpage.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="style.css">
+    <title>kendlbat.dev</title>
+</head>
+<body>
+    <div id="fullpage">
+        <div class="section" id="intro">
+            <h1>Tobias Kendlbacher</h1>
+            <p>
+                That is my name, this is my website. <a href="#menu" title="I swear it's cool!">Go explore it!</a>
+            </p>
+        </div>
+        <div class="section" id="about">
+            <h1>About me</h1>
+            <p>
+                I'm a student studying Computer Science at <a href="https://htl-villach.at" target="_blank"><abbr title="Higher Technical College and Research Institute Villach">HTL Villach</abbr></a>.<br>
+                Currently I am just creating random projects as a hobby.
+            </p>
+            <!--Social media buttons-->
+            <div class="social">
+                <a href="https://github.com/kendlbat" target="_blank" title="GitHub" class="fa fa-github"></a>
+                <a href="https://twitter.com/kendlbat" target="_blank" title="Twitter" class="fa fa-twitter"></a>
+            </div>
+
+        </div>
+        <div class="section" id="menu">
+            <h1>Coming soon...</h1>
+        </div>
+    </div>
+    <script src="fullpage/fullpage.min.js"></script>
+    <script>
+        var myFullpage = new fullpage('#fullpage', {
+            sectionsColor: ['#96EAC0', '#4EE69B', '#416654', '#3DB378'],
+            navigation: true,
+            navigationPosition: 'right',
+            navigationTooltips: ["Intro", "About", "Menu"]
+        });
+    </script>
+
+</body>
+</html>

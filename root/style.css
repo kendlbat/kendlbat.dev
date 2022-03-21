@@ -1,0 +1,53 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6, p {
+    margin: 0 auto;
+}
+
+h1 {
+    font-size: 4.5em;
+    font-weight: bold;
+}
+
+.section p {
+    font-size: 1.5em;
+    line-height: 1.5em;
+}
+
+.section {
+    text-align: center;
+}
+
+#fp-nav, #fp-sr-only {
+    color: black;
+}
+
+a {
+    text-decoration: none;
+    color: white;
+}
+
+a:hover {
+    color: red;
+}
+
+.fa {
+    background: grey;
+    width: 30px;
+    font-size: 30px;
+    border-radius: 30%;
+    padding: 12px;
+    text-decoration: none;
+    color: white;
+}
+
+.fa-github:hover {
+    background: #171515;
+}
+
+.fa-twitter:hover {
+    background: #55ACEE;
+}
