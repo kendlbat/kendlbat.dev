@@ -30,7 +30,7 @@ a {
     color: white;
 }
 
-a:hover {
+a:not(.fa):hover {
     color: red;
 }
 
