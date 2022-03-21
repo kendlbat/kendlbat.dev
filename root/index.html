@@ -11,13 +11,13 @@
 </head>
 <body>
     <div id="fullpage">
-        <div class="section" id="intro">
+        <div class="section" id="section0">
             <h1>Tobias Kendlbacher</h1>
             <p>
                 That is my name, this is my website. <a href="#menu" title="I swear it's cool!">Go explore it!</a>
             </p>
         </div>
-        <div class="section" id="about">
+        <div class="section" id="section1">
             <h1>About me</h1>
             <p>
                 I'm a student studying Computer Science at <a href="https://htl-villach.at" target="_blank"><abbr title="Higher Technical College and Research Institute Villach">HTL Villach</abbr></a>.<br>
@@ -30,7 +30,7 @@
             </div>
 
         </div>
-        <div class="section" id="menu">
+        <div class="section" id="section2">
             <h1>Coming soon...</h1>
         </div>
     </div>
@@ -40,7 +40,8 @@
             sectionsColor: ['#96EAC0', '#4EE69B', '#416654', '#3DB378'],
             navigation: true,
             navigationPosition: 'right',
-            navigationTooltips: ["Intro", "About", "Menu"]
+            navigationTooltips: ["Intro", "About", "Menu"],
+            anchors: ["intro", "about", "menu"]
         });
     </script>
 
