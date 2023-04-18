@@ -316,7 +316,7 @@ class WebConsole {
 
     }
 
-    #stdout = async (text, htmlMode = false) => {
+    stdout = async (text, htmlMode = false) => {
         let outelem = document.createElement("div");
         outelem.classList.add("webconsole-output-line");
 
@@ -330,7 +330,7 @@ class WebConsole {
         this.#container.scrollTop = this.#container.scrollHeight;
     }
 
-    #stdin = async (prompt) => {
+    stdin = async (prompt) => {
         // Set the input to the end of stdout 
         this.#promptelem = undefined;
         this.#promptelem = document.createElement("div");
@@ -376,9 +376,9 @@ class WebConsole {
         const args = command.split(" ");
         const name = args[0];
         if (this.#commands[name])
-            await this.#commands[name](args, this.#stdout, this.#stdin);
+            await this.#commands[name](args, this.stdout, this.stdin);
         else
-            this.#notfound(args, this.#stdout, this.#stdin);
+            this.#notfound(args, this.stdout, this.stdin);
     }
 
     /**
