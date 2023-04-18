@@ -336,6 +336,7 @@ class WebConsole {
         this.#promptelem = document.createElement("div");
         this.#promptelem.classList.add("webconsole-prompt");
         this.#promptelem.innerText = prompt;
+        let tmppromtelem = this.#promptelem;
         this.#container.appendChild(this.#promptelem);
         this.#cursor = document.createElement("span");
         this.#cursor.classList.add("webconsole-cursor");
@@ -349,11 +350,14 @@ class WebConsole {
                 if (e.key === "Enter") {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (this.#promptelem)
-                        this.#promptelem.innerHTML = (this.#promptoverride || this.#env.prompt) + this.#stdinbuffer;
+
+                    if (tmppromtelem)
+                        tmppromtelem.innerHTML = this.#promptoverride + this.#stdinbuffer;
+                    if (tmppromtelem === this.#promptelem) {
+                        this.#promptelem = undefined;
+                    }
                     this.#input.removeEventListener("keydown", el);
                     this.#promptoverride = null;
-                    this.#promptelem = undefined;
                     this.#input.value = "";
                     this.#stdindisable = false;
                     resolve(this.#stdinbuffer);
