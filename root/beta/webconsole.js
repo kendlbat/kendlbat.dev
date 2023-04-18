@@ -238,7 +238,7 @@ class WebConsole {
                 let matches = [];
                 if (beforeTab === null)
                     beforeTab = this.#stdinbuffer;
-                    
+
                 for (let cmd of Object.keys(this.#commands)) {
                     if (cmd.startsWith(beforeTab))
                         matches.push(cmd);
