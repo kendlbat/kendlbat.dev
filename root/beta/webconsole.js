@@ -397,7 +397,14 @@ class WebConsole {
     }
 
     loadHistoryFromLocalStorage(identifier) {
-        this.#history = JSON.parse(localStorage.getItem("webconsole-history-" + identifier));
+        let hist;
+        try {
+            hist = JSON.parse(localStorage.getItem("webconsole-history-" + identifier));
+        } catch (e) {
+            return;
+        }
+        if (Array.isArray(hist))
+            this.#history = hist;
         this.#historypos = this.#history.length;
     }
 }
