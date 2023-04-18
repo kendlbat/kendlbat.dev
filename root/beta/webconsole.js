@@ -316,7 +316,7 @@ class WebConsole {
 
     }
 
-    async #stdout(text, htmlMode = false) {
+    #stdout = async (text, htmlMode = false) => {
         let outelem = document.createElement("div");
         outelem.classList.add("webconsole-output-line");
 
@@ -330,7 +330,7 @@ class WebConsole {
         this.#container.scrollTop = this.#container.scrollHeight;
     }
 
-    async #stdin(prompt) {
+    #stdin = async (prompt) => {
         // Set the input to the end of stdout 
         this.#promptelem = undefined;
         this.#promptelem = document.createElement("div");
