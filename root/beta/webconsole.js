@@ -49,7 +49,7 @@ class WebConsole {
                 args.push(".");
 
             try {
-                let resp = await fetch(args[1] + "/dir.json");
+                let resp = await fetch(args[1] + "./dir.json");
                 (await resp.json())
                     .sort((a, b) => a.toLowerCase().localeCompare(b))
                     .forEach(element => {
