@@ -345,8 +345,11 @@ class WebConsole {
         // Get input
         this.#stdindisable = true;
         this.#promptoverride = prompt;
+        let eldisabled = false;
         let input = await new Promise((resolve) => {
             let el = this.#input.addEventListener("keydown", (e) => {
+                if (eldisabled)
+                    return;
                 if (e.key === "Enter") {
                     e.preventDefault();
                     e.stopPropagation();
@@ -357,6 +360,7 @@ class WebConsole {
                         this.#promptelem = undefined;
                     }
                     this.#input.removeEventListener("keydown", el);
+                    this.eldisabled = true;
                     this.#promptoverride = null;
                     this.#input.value = "";
                     this.#stdindisable = false;
