@@ -1,0 +1,75 @@
+#webconsole-container {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    padding: 5px 8px;
+}
+
+.webconsole-container {
+    background-color: #000000;
+    color: #ffffff;
+    font-family: monospace;
+    white-space: pre;
+}
+
+
+
+.webconsole-input {
+    z-index: 100;
+    position: fixed;
+    left: -100px;
+    top: -100px;
+    width: 0;
+    height: 0;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+.webconsole-cursor {
+    display: inline-block;
+    width: 0.1em;
+    height: 1.1em;
+    vertical-align: bottom;
+    background-color: #ffffff;
+    animation: blink 1s infinite;
+}
+
+.webconsole-container a {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.webconsole-container a:hover {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.webconsole-container a:active {
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.webconsole-container a:visited {
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+.webconsole-container h1, .webconsole-container h2, .webconsole-container h3, .webconsole-container h4, .webconsole-container h5, .webconsole-container h6, .webconsole-container p {
+    margin: 0;
+}
+
+.webconsole-output-line {
+    margin: 0;
+}
