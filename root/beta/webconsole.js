@@ -131,7 +131,8 @@ class WebConsole {
             } catch (e) {
                 stdout("Error: " + e);
             }
-        }
+        },
+        "": () => {}
     }
 
     constructor(container) {
@@ -161,8 +162,11 @@ class WebConsole {
                 setTimeout(() => {
                     if (!this.#stdindisable) {
                         this.#stdinbuffer = this.#input.value;
-                        if (this.#promptelem)
-                            this.#promptelem.innerHTML = (this.#promptoverride || this.#env.prompt) + this.#stdinbuffer + "<span class='webconsole-cursor'></span>";
+                        if (this.#promptelem) {
+                            this.#promptelem.innerHTML = (this.#promptoverride || this.#env.prompt);
+                            this.#promptelem.appendChild(this.#input);
+                            this.#input.focus();
+                        }
                     }
                 }, 2);
             }
@@ -179,9 +183,12 @@ class WebConsole {
             }
             let sync = () => {
                 this.#stdinbuffer = this.#input.value;
-                if (this.#promptelem)
-                    this.#promptelem.innerHTML = (this.#promptoverride || this.#env.prompt) + this.#stdinbuffer + "<span class='webconsole-cursor'></span>";
+                // if (this.#promptelem)
+                //     this.#stdinbuffer = this.#input.value;
+                //     this.#promptelem.innerHTML = (this.#promptoverride || this.#env.prompt);
+                //     this.#promptelem.appendChild(this.#input);
             }
+            // Log key
             if (e.key === "Enter") {
                 if (this.#stdindisable) {
                     e.preventDefault();
@@ -209,6 +216,9 @@ class WebConsole {
                     this.#stdinbuffer = this.#history[this.#historypos];
                     this.#input.value = this.#stdinbuffer;
                     sync();
+                    setTimeout(() => {
+                        this.#input.selectionStart = this.#input.selectionEnd = this.#stdinbuffer.length;
+                    }, 2);
                     return;
                 }
             } else if (e.key === "ArrowDown") {
@@ -222,12 +232,14 @@ class WebConsole {
                     else
                         this.#stdinbuffer = this.#history[this.#historypos];
                     this.#input.value = this.#stdinbuffer;
+                    this.#input.selectionStart = this.#input.selectionEnd = this.#input.value.length;
                     sync();
                     return;
                 }
             } else if (e.key === "Tab") {
                 if (this.#stdindisable)
                     return;
+                e.preventDefault();
                 // Tab completion (only for commands)
                 if (this.#stdinbuffer.length === 0)
                     return;
@@ -246,6 +258,8 @@ class WebConsole {
                 if (matches.length === 1) {
                     this.#stdinbuffer = matches[0];
                     this.#input.value = this.#stdinbuffer;
+                    // Set cursor in input to end
+                    this.#input.selectionStart = this.#input.selectionEnd = this.#input.value.length;
                     sync();
                     return;
                 }
@@ -263,6 +277,8 @@ class WebConsole {
 
                 this.#stdinbuffer = matches[currentTabMatch];
                 this.#input.value = this.#stdinbuffer;
+                // Set cursor in input to end
+                this.#input.selectionStart = this.#input.selectionEnd = this.#input.value.length;
                 sync();
                 e.preventDefault();
                 return;
@@ -294,9 +310,11 @@ class WebConsole {
         this.#promptelem.classList.add("webconsole-prompt");
         this.#promptelem.innerText = this.#env.prompt;
         this.#container.appendChild(this.#promptelem);
-        this.#cursor = document.createElement("span");
-        this.#cursor.classList.add("webconsole-cursor");
-        this.#promptelem.appendChild(this.#cursor);
+        this.#promptelem.appendChild(this.#input);
+        this.#input.focus();
+        // this.#cursor = document.createElement("span");
+        // this.#cursor.classList.add("webconsole-cursor");
+        // this.#promptelem.appendChild(this.#cursor);
         this.#output = document.createElement("div");
         this.#output.classList.add("webconsole-output");
         this.#container.appendChild(this.#output);
@@ -336,11 +354,13 @@ class WebConsole {
         this.#promptelem = document.createElement("div");
         this.#promptelem.classList.add("webconsole-prompt");
         this.#promptelem.innerText = prompt;
+        this.#promptelem.appendChild(this.#input);
         let tmppromtelem = this.#promptelem;
         this.#container.appendChild(this.#promptelem);
-        this.#cursor = document.createElement("span");
-        this.#cursor.classList.add("webconsole-cursor");
-        this.#promptelem.appendChild(this.#cursor);
+        this.#input.focus();
+        // this.#cursor = document.createElement("span");
+        // this.#cursor.classList.add("webconsole-cursor");
+        // this.#promptelem.appendChild(this.#cursor);
 
         // Get input
         this.#stdindisable = true;

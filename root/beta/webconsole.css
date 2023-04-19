@@ -17,12 +17,24 @@
 
 
 .webconsole-input {
-    z-index: 100;
+    /* z-index: 100;
     position: fixed;
     left: -100px;
     top: -100px;
     width: 0;
-    height: 0;
+    height: 0; */
+
+    border: none;
+    background-color: transparent;
+    color: #ffffff;
+    font-family: monospace;
+    margin: 0;
+    padding: 0;
+    font-size: 1em;
+}
+
+.webconsole-input:focus {
+    outline: none;
 }
 
 @keyframes blink {
