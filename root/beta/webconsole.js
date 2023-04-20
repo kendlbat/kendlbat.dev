@@ -1,4 +1,6 @@
 class WebConsole {
+    static #pyoditeURL = "https://cdn.jsdelivr.net/pyodide/v0.23.1/full/pyodide.js";
+
     #container;
     #env = {
         "prompt": "[kendlbat] $ "
@@ -135,7 +137,6 @@ class WebConsole {
             this.#container.appendChild(outpercentelem);
             this.#container.scrollTop = this.#container.scrollHeight;
 
-            // Function to animate /-\| loading bar until halted
             let animateLoadingBar = async (text, runCheck) => {
                 let i = 0;
                 let j = 0;
@@ -156,7 +157,7 @@ class WebConsole {
 
             let showLoading = true;
             let loadingAnim = animateLoadingBar("Loading pyodide script... ", () => showLoading);
-            await this.#loadScript("https://cdn.jsdelivr.net/pyodide/v0.23.1/full/pyodide.js");
+            await this.#loadScript(WebConsole.#pyoditeURL);
             showLoading = false;
             await loadingAnim;
 
@@ -245,6 +246,97 @@ class WebConsole {
             } while (!pyError);
 
         },
+        "pyrun": async (args, stdout, stdin) => {
+            let outpercentelem = document.createElement("div");
+            outpercentelem.classList.add("webconsole-output-line");
+            outpercentelem.innerHTML = "Loading pyodide...";
+            this.#container.appendChild(outpercentelem);
+            this.#container.scrollTop = this.#container.scrollHeight;
+
+            let showLoading = true;
+
+            let animateLoadingBar = async (text, runCheck) => {
+                let i = 0;
+                let j = 0;
+                let chars = ["/", "-", "\\", "|"];
+                while (runCheck()) {
+                    outpercentelem.innerHTML = text + " " + chars[i];
+                    // Increment i every 10 iterations
+                    if (j++ % 10 === 0)
+                        i = (i + 1) % chars.length;
+                    await new Promise((resolve) => setTimeout(resolve, 10));
+                }
+                outpercentelem.innerHTML = text + " DONE";
+            };
+
+            let removeLoadingBar = () => {
+                this.#container.removeChild(outpercentelem);
+            };
+
+            showLoading = true;
+            let loadingAnim = animateLoadingBar("Awaiting file upload... ", () => showLoading);
+            let file;
+            try {
+                file = await this.#fileSelect([".py", ".pyw"]);
+            } catch (e) {
+                stdout("Error while selecting file.");
+                showLoading = false;
+                await loadingAnim;
+                removeLoadingBar();
+                return;
+            }
+            showLoading = false;
+            await loadingAnim;
+
+            showLoading = true;
+            loadingAnim = animateLoadingBar("Reading file... ", () => showLoading);
+            let fileReader = new FileReader();
+            fileReader.readAsText(file);
+            await new Promise((resolve) => fileReader.onloadend = resolve);
+            file = fileReader.result;
+            showLoading = false;
+            await loadingAnim;
+
+            showLoading = true;
+            loadingAnim = animateLoadingBar("Loading pyodide script... ", () => showLoading);
+            await this.#loadScript(WebConsole.#pyoditeURL);
+            showLoading = false;
+            await loadingAnim;
+
+            showLoading = true;
+            loadingAnim = animateLoadingBar("Loading pyodide... ", () => showLoading);
+            // Run python interpreter on console, until it exits
+            let pyodide = await loadPyodide({
+                stdin: stdin,
+                stdout: stdout
+            });
+            showLoading = false;
+            await loadingAnim;
+
+            // Run python file
+            try {
+                let output = pyodide.runPython(file);
+                if (output !== undefined)
+                    stdout(output);
+            } catch (e) {
+                // Remove pyodite error message from stack trace (Starts with "PythonError: Traceback (most recent call last):")
+                // Up until File "<exec>", line 1, in <module>
+                if (new String(e).match(/^PythonError: Traceback \(most recent call last\):/m)) {
+                    let lines = new String(e).split("\n");
+                    let i = 0;
+                    for (; i < lines.length; i++) {
+                        if (lines[i].match(/^[\s]*File "<exec>", line 1, in <module>/m))
+                            break;
+                    }
+                    e = lines.slice(i + 1).join("\n");
+                }
+                stdout(e);
+            }
+
+        },
+
+
+
         "": () => { }
     }
 
@@ -440,6 +532,55 @@ class WebConsole {
             this.#container.removeChild(this.#container.firstChild);
         this.#container.appendChild(this.#inputcontainer);
         this.#input.focus();
+    }
+
+    /**
+     * 
+     * @param {Array<String>} allowed
+     * @returns {Promise<FileHandle> | Promise<undefined>}
+     */
+    #fileSelect(allowed = []) {
+        // // Get file upload via File System Access API
+        // let types = [];
+        // for (let [key, value] of Object.entries(allowed)) {
+        //     types.push({
+        //         description: key,
+        //         accept: value
+        //     });
+        // }
+
+        // const [fileHandle] = await window.showOpenFilePicker({
+        //     types: types,
+        //     multiple: false
+        // });
+        // return fileHandle;
+
+        // Get file upload via input, because File System Access API is not supported
+        let input = document.createElement("input");
+        input.type = "file";
+        input.multiple = false;
+        input.accept = 
+        input.click();
+        return new Promise((resolve, reject) => {
+            input.addEventListener("change", () => {
+                if (input.files.length === 0)
+                    resolve(undefined);
+                else
+                    resolve(input.files[0]);
+            });
+
+            input.addEventListener("error", () => {
+                reject();
+            });
+
+            input.addEventListener("abort", () => {
+                reject();
+            });
+
+            input.addEventListener("cancel", () => {
+                reject();
+            });
+        });
 
     }
 
