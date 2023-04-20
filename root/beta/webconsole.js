@@ -227,6 +227,17 @@ class WebConsole {
                         pyError = true;
                         break;
                     }
+                    // Remove pyodite error message from stack trace (Starts with "PythonError: Traceback (most recent call last):")
+                    // Up until File "<exec>", line 1, in <module>
+                    if (new String(e).match(/^PythonError: Traceback \(most recent call last\):/m)) {
+                        let lines = new String(e).split("\n");
+                        let i = 0;
+                        for (; i < lines.length; i++) {
+                            if (lines[i].match(/^[\s]*File "<exec>", line 1, in <module>/m))
+                                break;
+                        }
+                        e = lines.slice(i + 1).join("\n");
+                    }
                     stdout(e);
                 }
 
