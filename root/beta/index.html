@@ -16,11 +16,16 @@
         </p>
     </noscript>
     <script>
-        const VERSIONID = "0.1.0";
+        // Wait for script to load before firing domContentLoaded
+        const VERSIONID = "0.1.1";
         const script = document.createElement("script");
         script.src = "webconsole.js?version=" + VERSIONID;
         script.type = "module";
-        document.body.appendChild(script);
+        document.head.appendChild(script);
+        script.addEventListener("load", () => {
+            // Fire initMainWebconsole function
+            globalThis.initMainWebconsole();
+        });
     </script>
 </body>
 </html>
