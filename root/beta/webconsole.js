@@ -1,6 +1,4 @@
 class WebConsole {
-    static #hasInstance = false;
-
     #container;
     #env = {
         "prompt": "[kendlbat] $ "
@@ -11,10 +9,11 @@ class WebConsole {
     #promptelem;
     #stdindisable = false;
     #stdinbuffer = "";
-    #stdin_prompt_id = 0;
-    #cursor;
     #history = [];
     #historypos = 0;
+    #inputcontainer;
+
+    #cdncache = {};
 
     #notfound = (args, stdout) => {
         stdout("Command not found: " + args[0]);
@@ -40,26 +39,6 @@ class WebConsole {
             let resp = await fetch(args[1]);
             let text = await resp.text();
             stdout(text);
-        },
-        "ls": async (args, stdout) => {
-            // Get .index file from given / current directory
-            if (args.length < 2)
-                args.push(".");
-
-            try {
-                let resp = await fetch(args[1] + "/dir.json");
-                (await resp.json())
-                    .sort((a, b) => a.toLowerCase().localeCompare(b))
-                    .forEach(element => {
-                        if (element.startsWith("/") || element.endsWith("/")) {
-                            element = element.replace(/\/$/, "").replace(/^\//, "");
-                            stdout("<span style='color: #0000ff'>" + element + "</span>", true);
-                        } else stdout(element, false);
-                    });
-            } catch (e) {
-                stdout("Error: " + e);
-                return;
-            }
         },
         "html": async (args, stdout) => {
             // Cat but for html
@@ -132,15 +111,134 @@ class WebConsole {
                 stdout("Error: " + e);
             }
         },
-        "": () => {}
+        "iframe": async (args, stdout) => {
+            // Load argument as iframe
+            if (args.length < 2) {
+                stdout("Usage: iframe <url>");
+                return;
+            }
+            let url = args[1];
+            // Check if youtube
+            if (url.startsWith("https://www.youtube.com/watch?v=")) {
+                let id = url.split("v=")[1];
+                stdout(`<br><iframe width="560" height="315" src="https://youtube.com/embed/${id}?autoplay=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe><br>`, true);
+                return;
+            }
+            stdout("<br><iframe src='" + url + "'></iframe><br>", true);
+        },
+        "python": async (args, stdout, stdin) => {
+            // Load pyodide from CDN
+            // Insert script tag
+            let outpercentelem = document.createElement("div");
+            outpercentelem.classList.add("webconsole-output-line");
+            outpercentelem.innerHTML = "Loading pyodide...";
+            this.#container.appendChild(outpercentelem);
+            this.#container.scrollTop = this.#container.scrollHeight;
+
+            // Function to animate /-\| loading bar until halted
+            let animateLoadingBar = async (text, runCheck) => {
+                let i = 0;
+                let j = 0;
+                let chars = ["/", "-", "\\", "|"];
+                while (runCheck()) {
+                    outpercentelem.innerHTML = text + " " + chars[i];
+                    // Increment i every 10 iterations
+                    if (j++ % 10 === 0)
+                        i = (i + 1) % chars.length;
+                    await new Promise((resolve) => setTimeout(resolve, 10));
+                }
+                outpercentelem.innerHTML = text + " DONE";
+            };
+
+            let removeLoadingBar = () => {
+                this.#container.removeChild(outpercentelem);
+            };
+
+            let showLoading = true;
+            let loadingAnim = animateLoadingBar("Loading pyodide script... ", () => showLoading);
+            await this.#loadScript("https://cdn.jsdelivr.net/pyodide/v0.23.1/full/pyodide.js");
+            showLoading = false;
+            await loadingAnim;
+
+            showLoading = true;
+            loadingAnim = animateLoadingBar("Loading pyodide... ", () => showLoading);
+            // Run python interpreter on console, until it exits
+            let pyodide = await loadPyodide({
+                stdin: stdin,
+                stdout: stdout
+            });
+            showLoading = false;
+            await loadingAnim;
+
+            showLoading = true;
+            loadingAnim = animateLoadingBar("Loading python packages... ", () => showLoading);
+            await pyodide.runPythonAsync("import sys");
+            showLoading = false;
+            await loadingAnim;
+            removeLoadingBar();
+            pyodide.runPython(`print(f'Python {sys.version}] on WebConsole\\nType "help", "copyright", "credits" or "license" for more information.')`);
+
+            let pyError = false;
+
+            do {
+                let code = "";
+                let input = await stdin(">>> ");
+
+                // If input starts with "^", ctrl command
+
+                if (input.startsWith("^")) {
+                    let cmd = input.substring(1);
+                    switch (cmd) {
+                        case "C":
+                            // Send keyboard interrupt
+                            code = "raise KeyboardInterrupt()";
+                            break;
+                        default:
+                            // Just type it in
+                            code = input;
+                            break;
+                    }
+                } else code = input;
+
+                if (input.endsWith(":")) {
+                    // next line
+                    let nextline = await stdin("... ");
+                    code += nextline;
+
+                    // if empty line is found
+                    while (nextline !== "") {
+                        nextline = await stdin("... ");
+                        if (nextline.startsWith("^")) {
+                            code = "raise KeyboardInterrupt()";
+                            break;
+                        } else
+                            code += "\n" + nextline;
+                    }
+                }
+
+                // Run python
+                try {
+                    pyError = false;
+                    let output = pyodide.runPython(code);
+                    if (output !== undefined)
+                        stdout(output);
+                } catch (e) {
+                    if (new String(e).match(/\nSystemExit/m)) {
+                        pyError = true;
+                        break;
+                    }
+                    stdout(e);
+                }
+
+
+            } while (!pyError);
+
+        },
+        "": () => { }
     }
 
     constructor(container) {
-        if (WebConsole.#hasInstance)
-            throw new Error("WebConsole already has an instance");
-        WebConsole.#hasInstance = true;
         this.#container = container;
-        this.#container.style.overflow = "scroll";
 
         // Whenever new content is added, scroll to bottom
         this.#container.addEventListener("DOMNodeInserted", () => {
@@ -149,8 +247,11 @@ class WebConsole {
 
         this.#container.classList.add("webconsole-container");
         this.#input = document.createElement("input");
-        this.#input.type = "text";
+        // this.#input.type = "text";
         this.#input.classList.add("webconsole-input");
+        this.#inputcontainer = document.createElement("div");
+        this.#inputcontainer.classList.add("webconsole-input-container");
+        this.#inputcontainer.appendChild(this.#input);
 
         document.addEventListener("DOMContentLoaded", () => {
             this.#input.focus();
@@ -164,7 +265,7 @@ class WebConsole {
                         this.#stdinbuffer = this.#input.value;
                         if (this.#promptelem) {
                             this.#promptelem.innerHTML = (this.#promptoverride || this.#env.prompt);
-                            this.#promptelem.appendChild(this.#input);
+                            this.#promptelem.appendChild(this.#inputcontainer);
                             this.#input.focus();
                         }
                     }
@@ -300,7 +401,7 @@ class WebConsole {
         this.#output.classList.add("webconsole-output");
         this.#output.innerHTML = "WebConsole v0.1.0\n(c) Tobias Kendlbacher 2023 - MIT License\nType 'help' for a list of commands.\nType 'nav' for navigation.\n\n";
         this.#container.appendChild(this.#output);
-        this.#container.appendChild(this.#input);
+        this.#container.appendChild(this.#inputcontainer);
         this.#newInputLine();
         this.#container.scrollTop = this.#container.scrollHeight;
     }
@@ -310,11 +411,8 @@ class WebConsole {
         this.#promptelem.classList.add("webconsole-prompt");
         this.#promptelem.innerText = this.#env.prompt;
         this.#container.appendChild(this.#promptelem);
-        this.#promptelem.appendChild(this.#input);
+        this.#promptelem.appendChild(this.#inputcontainer);
         this.#input.focus();
-        // this.#cursor = document.createElement("span");
-        // this.#cursor.classList.add("webconsole-cursor");
-        // this.#promptelem.appendChild(this.#cursor);
         this.#output = document.createElement("div");
         this.#output.classList.add("webconsole-output");
         this.#container.appendChild(this.#output);
@@ -329,7 +427,7 @@ class WebConsole {
         // Remove everything, recreate the input line
         while (this.#container.firstChild)
             this.#container.removeChild(this.#container.firstChild);
-        this.#container.appendChild(this.#input);
+        this.#container.appendChild(this.#inputcontainer);
         this.#input.focus();
 
     }
@@ -337,6 +435,8 @@ class WebConsole {
     stdout = async (text, htmlMode = false) => {
         let outelem = document.createElement("div");
         outelem.classList.add("webconsole-output-line");
+        if (text === undefined)
+            text = "";
 
         if (htmlMode) {
             outelem.innerHTML = text;
@@ -354,13 +454,10 @@ class WebConsole {
         this.#promptelem = document.createElement("div");
         this.#promptelem.classList.add("webconsole-prompt");
         this.#promptelem.innerText = prompt;
-        this.#promptelem.appendChild(this.#input);
+        this.#promptelem.appendChild(this.#inputcontainer);
         let tmppromtelem = this.#promptelem;
         this.#container.appendChild(this.#promptelem);
         this.#input.focus();
-        // this.#cursor = document.createElement("span");
-        // this.#cursor.classList.add("webconsole-cursor");
-        // this.#promptelem.appendChild(this.#cursor);
 
         // Get input
         this.#stdindisable = true;
@@ -379,7 +476,7 @@ class WebConsole {
                     if (tmppromtelem === this.#promptelem) {
                         this.#promptelem = undefined;
                     }
-                    
+
                     // CLEAR THE EVENT LISTENER
                     this.#input.removeEventListener("keydown", eventlistfunc);
 
@@ -388,6 +485,38 @@ class WebConsole {
                     this.#input.value = "";
                     this.#stdindisable = false;
                     resolve(this.#stdinbuffer);
+                    this.#stdinbuffer = "";
+                } else if (e.key === "Tab") {
+                    // Should enter a tab
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Type tab
+                    let cursorstart = this.#input.selectionStart;
+                    let cursorend = this.#input.selectionEnd;
+                    this.#input.value = this.#input.value.substring(0, cursorstart) + "\t" + this.#input.value.substring(cursorend);
+                    this.#input.selectionStart = this.#input.selectionEnd = cursorstart + 1;
+                    this.#stdinbuffer = this.#input.value;
+                    // Set tab width to 4 spaces
+                    // Set cursor in input to appropriate position
+                } else if (e.ctrlKey) {
+                    // If letter key
+                    if (e.key.length === 1) {
+                        if (tmppromtelem)
+                            tmppromtelem.innerHTML = this.#promptoverride + this.#stdinbuffer;
+                        if (tmppromtelem === this.#promptelem) {
+                            this.#promptelem = undefined;
+                        }
+
+                        // CLEAR THE EVENT LISTENER
+                        this.#input.removeEventListener("keydown", eventlistfunc);
+
+                        this.eldisabled = true;
+                        this.#promptoverride = null;
+                        this.#input.value = "";
+                        this.#stdindisable = false;
+                        resolve("^" + e.key.toUpperCase());
+                        this.#stdinbuffer = "";
+                    }
                 }
             }
             this.#input.addEventListener("keydown", eventlistfunc);
@@ -414,6 +543,32 @@ class WebConsole {
         this.#commands[name] = callback;
     }
 
+    /**
+     * 
+     * @param {string} url 
+     * @param {Function} percentageCallback 
+     * @returns 
+     */
+    async #loadScript(url, percentageCallback = (perc) => { }) {
+        if (!this.#cdncache[url]) {
+
+            // Load script
+            let scriptelem = document.createElement("script");
+            scriptelem.src = url;
+            scriptelem.type = "text/javascript";
+            scriptelem.async = false;
+            scriptelem.addEventListener("progress", (e) => {
+                percentageCallback(e.loaded / e.total * 100);
+            });
+            document.head.appendChild(scriptelem);
+            await new Promise((resolve) => {
+                scriptelem.addEventListener("load", resolve);
+            });
+            this.#cdncache[url] = true;
+        }
+        percentageCallback(100);
+        return;
+    }
     /**
      * 
      * @param {string} name 

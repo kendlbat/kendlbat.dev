@@ -1,10 +1,14 @@
+:root * {
+    box-sizing: border-box;
+}
+
 #webconsole-container {
     position: fixed;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    padding: 5px 8px;
+    padding: 5px 8px 40px;
 }
 
 .webconsole-container {
@@ -12,18 +16,19 @@
     color: #ffffff;
     font-family: monospace;
     white-space: pre;
+    overflow: auto;
 }
 
+.webconsole-prompt {
+    display: table;
+}
 
+.webconsole-input-container {
+    display: table-cell;
+    width: 100%;
+}
 
 .webconsole-input {
-    /* z-index: 100;
-    position: fixed;
-    left: -100px;
-    top: -100px;
-    width: 0;
-    height: 0; */
-
     border: none;
     background-color: transparent;
     color: #ffffff;
@@ -31,31 +36,12 @@
     margin: 0;
     padding: 0;
     font-size: 1em;
+    width: 100%;
+    tab-size: 4;
 }
 
 .webconsole-input:focus {
     outline: none;
-}
-
-@keyframes blink {
-    0% {
-        opacity: 0;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        opacity: 0;
-    }
-}
-
-.webconsole-cursor {
-    display: inline-block;
-    width: 0.1em;
-    height: 1.1em;
-    vertical-align: bottom;
-    background-color: #ffffff;
-    animation: blink 1s infinite;
 }
 
 .webconsole-container a {
