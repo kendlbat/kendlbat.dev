@@ -336,9 +336,9 @@ class WebConsole {
             }
 
         },
-
-
-
+        "exit": () => {
+            window.close();
+        },
         "": () => { }
     }
 
