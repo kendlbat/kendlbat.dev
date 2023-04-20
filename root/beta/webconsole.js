@@ -336,8 +336,8 @@ class WebConsole {
             }
 
         },
-        "exit": (args, stdout, stdin) => {
-            while (!stdin("Please press Ctrl+W to exit...") != "^W") { }
+        "exit": async (args, stdout, stdin) => {
+            while (!(await stdin("Please press Ctrl+W to exit...")) != "^W") { }
         },
         "": () => { }
     }
