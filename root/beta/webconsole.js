@@ -336,8 +336,8 @@ class WebConsole {
             }
 
         },
-        "exit": () => {
-            window.close();
+        "exit": (args, stdout, stdin) => {
+            while (!stdin("Please press Ctrl+W to exit...") != "^W") { }
         },
         "": () => { }
     }
