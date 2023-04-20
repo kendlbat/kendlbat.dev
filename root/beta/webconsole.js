@@ -1,4 +1,6 @@
 class WebConsole {
+    static VERSION = VERSIONID || "N/A";
+
     static #pyoditeURL = "https://cdn.jsdelivr.net/pyodide/v0.23.1/full/pyodide.js";
 
     #container;
@@ -502,7 +504,7 @@ class WebConsole {
         this.#container.addEventListener("click", () => this.#input.focus());
         this.#output = document.createElement("div");
         this.#output.classList.add("webconsole-output");
-        this.#output.innerHTML = "WebConsole v0.1.0\n(c) Tobias Kendlbacher 2023 - MIT License\nType 'help' for a list of commands.\nType 'nav' for navigation.\n\n";
+        this.#output.innerHTML = "WebConsole v" + WebConsole.VERSION + "\n(c) Tobias Kendlbacher 2023 - MIT License\nType 'help' for a list of commands.\nType 'nav' for navigation.\n\n";
         this.#container.appendChild(this.#output);
         this.#container.appendChild(this.#inputcontainer);
         this.#newInputLine();

@@ -9,6 +9,12 @@
 </head>
 <body>
     <div id="webconsole-container"></div>
-    <script type="module" src="webconsole.js"></script>
+    <script>
+        const VERSIONID = "0.1.0";
+        const script = document.createElement("script");
+        script.src = "webconsole.js?version=" + VERSIONID;
+        script.type = "module";
+        document.body.appendChild(script);
+    </script>
 </body>
 </html>
