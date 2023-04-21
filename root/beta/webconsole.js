@@ -168,7 +168,6 @@ class WebConsole {
             loadingAnim = animateLoadingBar("Loading pyodide... ", () => showLoading);
             // Run python interpreter on console, until it exits
             let pyodide = await loadPyodide({
-                stdin: stdin,
                 stdout: stdout
             });
             showLoading = false;
