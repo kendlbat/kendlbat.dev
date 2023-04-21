@@ -268,6 +268,8 @@ class WebConsole {
 
         },
         "pyrun": async (args, stdout, stdin) => {
+            let file;
+
             let outpercentelem = document.createElement("div");
             outpercentelem.classList.add("webconsole-output-line");
             outpercentelem.innerHTML = "Loading pyodide...";
@@ -275,6 +277,7 @@ class WebConsole {
             this.#container.scrollTop = this.#container.scrollHeight;
 
             let showLoading = true;
+            let loadingAnim;
 
             let animateLoadingBar = async (text, runCheck) => {
                 let i = 0;
@@ -294,29 +297,48 @@ class WebConsole {
                 this.#container.removeChild(outpercentelem);
             };
 
-            showLoading = true;
-            let loadingAnim = animateLoadingBar("Awaiting file upload... ", () => showLoading);
-            let file;
-            try {
-                file = await this.#fileSelect([".py", ".pyw"]);
-            } catch (e) {
-                stdout("Error while selecting file.");
+            if (args.length > 2) {
+                stdout("Usage: pyrun [file]");
+                return;
+            } else if (args.length === 2) {
+                file = args[1];
+                showLoading = true;
+                loadingAnim = animateLoadingBar("Fetching file... ", () => showLoading);
+                let response = await fetch(file);
+                if (!response.ok) {
+                    stdout("Error while fetching file: " + response.status + " " + response.statusText);
+                    showLoading = false;
+                    await loadingAnim;
+                    removeLoadingBar();
+                    return;
+                }
+                file = await response.text();
                 showLoading = false;
                 await loadingAnim;
-                removeLoadingBar();
-                return;
+            } else {
+                showLoading = true;
+                loadingAnim = animateLoadingBar("Awaiting file upload... ", () => showLoading);
+                try {
+                    file = await this.#fileSelect([".py", ".pyw"]);
+                } catch (e) {
+                    stdout("Error while selecting file.");
+                    showLoading = false;
+                    await loadingAnim;
+                    removeLoadingBar();
+                    return;
+                }
+                showLoading = false;
+                await loadingAnim;
+    
+                showLoading = true;
+                loadingAnim = animateLoadingBar("Reading file... ", () => showLoading);
+                let fileReader = new FileReader();
+                fileReader.readAsText(file);
+                await new Promise((resolve) => fileReader.onloadend = resolve);
+                file = fileReader.result;
+                showLoading = false;
+                await loadingAnim;
             }
-            showLoading = false;
-            await loadingAnim;
-
-            showLoading = true;
-            loadingAnim = animateLoadingBar("Reading file... ", () => showLoading);
-            let fileReader = new FileReader();
-            fileReader.readAsText(file);
-            await new Promise((resolve) => fileReader.onloadend = resolve);
-            file = fileReader.result;
-            showLoading = false;
-            await loadingAnim;
 
             showLoading = true;
             loadingAnim = animateLoadingBar("Loading pyodide script... ", () => showLoading);
@@ -443,9 +465,8 @@ class WebConsole {
         this.#inputcontainer.classList.add("webconsole-input-container");
         this.#inputcontainer.appendChild(this.#input);
 
-        document.addEventListener("DOMContentLoaded", () => {
-            this.#input.focus();
-        });
+        
+        this.#input.focus();
 
         document.addEventListener("keydown", () => {
             if (document.activeElement !== this.#input) {
