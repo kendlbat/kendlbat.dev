@@ -179,13 +179,16 @@ class WebConsole {
             // Install packages with micropip
             await pyodide.loadPackage("micropip");
             await pyodide.runPythonAsync("import micropip");
-            this.#pypackages.forEach(async (pkg) => {
-                try {
-                    await pyodide.runPythonAsync(`await micropip.install("${pkg}")`);
-                } catch (e) {
-                    stdout("Error while installing python package " + pkg + ": " + e);
-                }
+            let installpromises = this.#pypackages.map((pkg) => {
+                return (async () => {
+                    try {
+                        await pyodide.runPythonAsync(`await micropip.install("${pkg}")`);
+                    } catch (e) {
+                        stdout('Error while installing python package "' + pkg + '"');
+                    }
+                })();
             });
+            await Promise.all(installpromises);
             showLoading = false;
             await loadingAnim;
 
@@ -195,7 +198,7 @@ class WebConsole {
             showLoading = false;
             await loadingAnim;
             removeLoadingBar();
-            pyodide.runPython(`print(f'Python {sys.version}] on WebConsole\\nType "help", "copyright", "credits" or "license" for more information.')`);
+            pyodide.runPython(`print(f'Python {sys.version})] on WebConsole\\nType "help", "copyright", "credits" or "license" for more information.')`);
 
             let pyError = false;
 
@@ -336,16 +339,21 @@ class WebConsole {
             // Install packages with micropip
             await pyodide.loadPackage("micropip");
             await pyodide.runPythonAsync("import micropip");
-            this.#pypackages.forEach(async (pkg) => {
-                try {
-                    await pyodide.runPythonAsync(`await micropip.install("${pkg}")`);
-                } catch (e) {
-                    stdout("Error while installing python package " + pkg + ": " + e);
-                }
+            let installpromises = this.#pypackages.map((pkg) => {
+                return (async () => {
+
+                    try {
+                        await pyodide.runPythonAsync(`await micropip.install("${pkg}")`);
+                    } catch (e) {
+                        stdout("Error while installing python package " + pkg + ": " + e);
+                    }
+                })();
             });
+            await Promise.all(installpromises);
+
             showLoading = false;
             await loadingAnim;
-        
+
 
             showLoading = true;
             loadingAnim = animateLoadingBar("Loading python packages... ", () => showLoading);
@@ -375,15 +383,40 @@ class WebConsole {
 
         },
         "pypkg": async (args, stdout) => {
-            let packages = args.slice(1);
+            if (args.length < 3) {
+                stdout("Usage: pypkg <add|remove> <package> [package2] [package3] ...");
+                return;
+            }
+
+            let add;
+            let action = args[1];
+            switch (action) {
+                case "add": add = true; break;
+                case "remove": add = false; break;
+                default:
+                    stdout("Usage: pypkg <add|remove> <package> [package2] [package3] ...");
+                    return;
+            }
+
+
+            let packages = args.slice(2);
             for (let pkg of packages) {
                 if (pkg === "")
                     continue;
                 if (this.#pypackages.includes(pkg))
-                    stdout("Package " + pkg + " is already installed.");
+                    if (add)
+                        stdout("Package " + pkg + " is already installed.");
+                    else {
+                        this.#pypackages.splice(this.#pypackages.indexOf(pkg), 1);
+                        stdout("Package " + pkg + " removed from install list.");
+                    }
                 else {
-                    this.#pypackages.push(pkg);
-                    stdout("Package " + pkg + " added to install list.");
+                    if (add) {
+                        this.#pypackages.push(pkg);
+                        stdout("Package " + pkg + " added to install list.");
+                    } else {
+                        stdout("Package " + pkg + " is not installed.");
+                    }
                 }
             }
         },
@@ -405,6 +438,7 @@ class WebConsole {
         this.#input = document.createElement("input");
         // this.#input.type = "text";
         this.#input.classList.add("webconsole-input");
+
         this.#inputcontainer = document.createElement("div");
         this.#inputcontainer.classList.add("webconsole-input-container");
         this.#inputcontainer.appendChild(this.#input);
@@ -415,16 +449,14 @@ class WebConsole {
 
         document.addEventListener("keydown", () => {
             if (document.activeElement !== this.#input) {
-                // if no text is selected, go back to input
-                if (!window.getSelection().toString() === "")
-                    return;
-                this.#input.focus();
                 setTimeout(() => {
                     if (!this.#stdindisable) {
                         this.#stdinbuffer = this.#input.value;
                         if (this.#promptelem) {
                             this.#promptelem.innerHTML = (this.#promptoverride || this.#env.prompt);
                             this.#promptelem.appendChild(this.#inputcontainer);
+                            if (window.getSelection().toString() !== "")
+                                return;
                             this.#input.focus();
                         }
                     }
@@ -554,11 +586,19 @@ class WebConsole {
 
             e.target.addEventListener("input", sync, { once: true });
         });
-        this.#container.addEventListener("focus", () => this.#input.focus());
-        this.#container.addEventListener("click", () => {
-            if (!window.getSelection().toString() === "")
+        this.#container.addEventListener("focus", () => {
+            setTimeout(() => {
+                if (window.getSelection().toString() !== "")
                     return;
-            this.#input.focus();
+                this.#input.focus();
+            }, 2);
+        });
+        this.#container.addEventListener("click", () => {
+            setTimeout(() => {
+                if (window.getSelection().toString() !== "")
+                    return;
+                this.#input.focus();
+            }, 2);
         });
         this.#output = document.createElement("div");
         this.#output.classList.add("webconsole-output");
@@ -621,8 +661,8 @@ class WebConsole {
         let input = document.createElement("input");
         input.type = "file";
         input.multiple = false;
-        input.accept = 
-        input.click();
+        input.accept =
+            input.click();
         return new Promise((resolve, reject) => {
             input.addEventListener("change", () => {
                 if (input.files.length === 0)
@@ -820,7 +860,7 @@ function initMainWebconsole() {
 
     window.addEventListener('beforeunload', (e) => {
         mainconsole.saveHistoryToLocalStorage("kendlportfolio");
-    });    
+    });
 }
 
 globalThis.initMainWebconsole = initMainWebconsole;
