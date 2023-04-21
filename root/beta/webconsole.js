@@ -78,42 +78,44 @@ class WebConsole {
             stdout("Cleared " + count + " history entries!");
         },
         "nav": async (args, stdout, stdin) => {
-            // Interactive menu for navigating through articles (show in cli with stdout)
-            // Get dir.json from ./pages
-            try {
-                let resp = await fetch("./pages/pageidx.json");
-                let json = await resp.json();
-                let pages = Object.keys(json);
-                stdout("<br>", true);
-                let count = 0;
+            while (true) {
+                // Interactive menu for navigating through articles (show in cli with stdout)
+                // Get dir.json from ./pages
+                try {
+                    let resp = await fetch("./pages/pageidx.json");
+                    let json = await resp.json();
+                    let pages = Object.keys(json);
+                    stdout("<br>", true);
+                    let count = 0;
 
-                for (let page of pages) {
-                    stdout(`  [${count++}] ${page}`, true);
-                }
-                // quit option
-                stdout(`  [q] Cancel`, true);
-                stdout("<br>", true);
+                    for (let page of pages) {
+                        stdout(`  [${count++}] ${page}`, true);
+                    }
+                    // quit option
+                    stdout(`  [q] Cancel`, true);
+                    stdout("<br>", true);
 
-                let input = await stdin("Enter selection: ");
-                if (input === null)
-                    return;
-                let num = parseInt(input);
-                if (input.toLowerCase() === "q")
-                    return;
-                if (isNaN(num) || num < 0 || num >= pages.length) {
-                    stdout("Invalid selection");
-                    return;
+                    let input = await stdin("Enter selection: ");
+                    if (input === null)
+                        continue;
+                    let num = parseInt(input);
+                    if (input.toLowerCase() === "q")
+                        break;
+                    if (isNaN(num) || num < 0 || num >= pages.length) {
+                        stdout("Invalid selection");
+                        continue;
+                    }
+                    // Show html page
+                    // console.log(json);
+                    // console.log(pages);
+                    let pageres = await fetch("./pages/" + json[pages[num]]);
+                    let pagetext = await pageres.text();
+                    pagetext = pagetext.replace(/(\r)?\n/g, "");
+                    this.#clear();
+                    stdout("<br>" + pagetext + "<br>", true);
+                } catch (e) {
+                    stdout("Error: " + e);
                 }
-                // Show html page
-                // console.log(json);
-                // console.log(pages);
-                let pageres = await fetch("./pages/" + json[pages[num]]);
-                let pagetext = await pageres.text();
-                pagetext = pagetext.replace(/(\r)?\n/g, "");
-                this.#clear();
-                stdout("<br>" + pagetext + "<br>", true);
-            } catch (e) {
-                stdout("Error: " + e);
             }
         },
         "iframe": async (args, stdout) => {
@@ -330,7 +332,7 @@ class WebConsole {
                 }
                 showLoading = false;
                 await loadingAnim;
-    
+
                 showLoading = true;
                 loadingAnim = animateLoadingBar("Reading file... ", () => showLoading);
                 let fileReader = new FileReader();
@@ -469,7 +471,7 @@ class WebConsole {
         this.#inputcontainer.classList.add("webconsole-input-container");
         this.#inputcontainer.appendChild(this.#input);
 
-        
+
         this.#input.focus();
 
         document.addEventListener("keydown", () => {
