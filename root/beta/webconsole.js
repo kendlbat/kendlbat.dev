@@ -7,6 +7,7 @@ class WebConsole {
     #env = {
         "prompt": "[kendlbat] $ "
     };
+    #pypackages = [];
     #promptoverride = null;
     #input;
     #output;
@@ -174,6 +175,21 @@ class WebConsole {
             await loadingAnim;
 
             showLoading = true;
+            loadingAnim = animateLoadingBar("Installing python packages... ", () => showLoading);
+            // Install packages with micropip
+            await pyodide.loadPackage("micropip");
+            await pyodide.runPythonAsync("import micropip");
+            this.#pypackages.forEach(async (pkg) => {
+                try {
+                    await pyodide.runPythonAsync(`await micropip.install("${pkg}")`);
+                } catch (e) {
+                    stdout("Error while installing python package " + pkg + ": " + e);
+                }
+            });
+            showLoading = false;
+            await loadingAnim;
+
+            showLoading = true;
             loadingAnim = animateLoadingBar("Loading python packages... ", () => showLoading);
             await pyodide.runPythonAsync("import sys");
             showLoading = false;
@@ -315,6 +331,28 @@ class WebConsole {
             showLoading = false;
             await loadingAnim;
 
+            showLoading = true;
+            loadingAnim = animateLoadingBar("Installing python packages... ", () => showLoading);
+            // Install packages with micropip
+            await pyodide.loadPackage("micropip");
+            await pyodide.runPythonAsync("import micropip");
+            this.#pypackages.forEach(async (pkg) => {
+                try {
+                    await pyodide.runPythonAsync(`await micropip.install("${pkg}")`);
+                } catch (e) {
+                    stdout("Error while installing python package " + pkg + ": " + e);
+                }
+            });
+            showLoading = false;
+            await loadingAnim;
+        
+
+            showLoading = true;
+            loadingAnim = animateLoadingBar("Loading python packages... ", () => showLoading);
+            await pyodide.runPythonAsync("import sys");
+            showLoading = false;
+            await loadingAnim;
+
             // Run python file
             try {
                 let output = pyodide.runPython(file);
@@ -335,6 +373,19 @@ class WebConsole {
                 stdout(e);
             }
 
+        },
+        "pypkg": async (args, stdout) => {
+            let packages = args.slice(1);
+            for (let pkg of packages) {
+                if (pkg === "")
+                    continue;
+                if (this.#pypackages.includes(pkg))
+                    stdout("Package " + pkg + " is already installed.");
+                else {
+                    this.#pypackages.push(pkg);
+                    stdout("Package " + pkg + " added to install list.");
+                }
+            }
         },
         "exit": async (args, stdout, stdin) => {
             while (!(await stdin("Please press Ctrl+W to exit...")) != "^W") { }
@@ -364,6 +415,9 @@ class WebConsole {
 
         document.addEventListener("keydown", () => {
             if (document.activeElement !== this.#input) {
+                // if no text is selected, go back to input
+                if (!window.getSelection().toString() === "")
+                    return;
                 this.#input.focus();
                 setTimeout(() => {
                     if (!this.#stdindisable) {
@@ -501,7 +555,11 @@ class WebConsole {
             e.target.addEventListener("input", sync, { once: true });
         });
         this.#container.addEventListener("focus", () => this.#input.focus());
-        this.#container.addEventListener("click", () => this.#input.focus());
+        this.#container.addEventListener("click", () => {
+            if (!window.getSelection().toString() === "")
+                    return;
+            this.#input.focus();
+        });
         this.#output = document.createElement("div");
         this.#output.classList.add("webconsole-output");
         this.#output.innerHTML = "WebConsole v" + WebConsole.VERSION + "\n(c) Tobias Kendlbacher 2023 - MIT License\nType 'help' for a list of commands.\nType 'nav' for navigation.\n\n";
@@ -517,7 +575,8 @@ class WebConsole {
         this.#promptelem.innerText = this.#env.prompt;
         this.#container.appendChild(this.#promptelem);
         this.#promptelem.appendChild(this.#inputcontainer);
-        this.#input.focus();
+        if (window.getSelection().toString() === "")
+            this.#input.focus();
         this.#output = document.createElement("div");
         this.#output.classList.add("webconsole-output");
         this.#container.appendChild(this.#output);
@@ -533,7 +592,8 @@ class WebConsole {
         while (this.#container.firstChild)
             this.#container.removeChild(this.#container.firstChild);
         this.#container.appendChild(this.#inputcontainer);
-        this.#input.focus();
+        if (window.getSelection().toString() === "")
+            this.#input.focus();
     }
 
     /**
@@ -611,7 +671,8 @@ class WebConsole {
         this.#promptelem.appendChild(this.#inputcontainer);
         let tmppromtelem = this.#promptelem;
         this.#container.appendChild(this.#promptelem);
-        this.#input.focus();
+        if (window.getSelection().toString() === "")
+            this.#input.focus();
 
         // Get input
         this.#stdindisable = true;
