@@ -166,9 +166,11 @@ class WebConsole {
 
             showLoading = true;
             loadingAnim = animateLoadingBar("Loading pyodide... ", () => showLoading);
-            // Run python interpreter on console, until it exits
             let pyodide = await loadPyodide({
-                stdout: stdout
+                stdout: (text) => {
+                    stdout(text)
+                    console.log(text);
+                }
             });
             showLoading = false;
             await loadingAnim;
@@ -197,7 +199,7 @@ class WebConsole {
             showLoading = false;
             await loadingAnim;
             removeLoadingBar();
-            pyodide.runPython(`print(f'Python {sys.version})] on WebConsole\\nType "help", "copyright", "credits" or "license" for more information.')`);
+            pyodide.runPython(`print(f'Python {sys.version})] on WebConsole\\nType "help", "copyright", "credits" or "license" for more information.')\nFor technical reasons, input prompts can only be seen in the browser console (F12)`);
 
             let pyError = false;
 
@@ -347,10 +349,11 @@ class WebConsole {
 
             showLoading = true;
             loadingAnim = animateLoadingBar("Loading pyodide... ", () => showLoading);
-            // Run python interpreter on console, until it exits
             let pyodide = await loadPyodide({
-                stdin: stdin,
-                stdout: stdout
+                stdout: (text) => {
+                    stdout(text);
+                    console.log(text);
+                }
             });
             showLoading = false;
             await loadingAnim;
@@ -381,6 +384,8 @@ class WebConsole {
             await pyodide.runPythonAsync("import sys");
             showLoading = false;
             await loadingAnim;
+
+            stdout("For technical reasons, input prompts can only be seen in the browser console (F12)");
 
             // Run python file
             try {
