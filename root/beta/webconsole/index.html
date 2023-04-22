@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webconsole</title>
+    <link rel="stylesheet" href="webconsole.css">
+</head>
+<body>
+    <div id="webconsole-container"></div>
+    <noscript>
+        <p>
+            This page requires JavaScript to be enabled in order to work properly.
+            Please enable JavaScript in your browser and reload the page.
+        </p>
+    </noscript>
+    <script>
+        const VERSIONID = "0.1.9";
+        const script = document.createElement("script");
+        script.src = "webconsole.js?version=" + VERSIONID;
+        script.type = "module";
+        document.head.appendChild(script);
+        script.addEventListener("load", () => {
+            globalThis.initMainWebconsole();
+        });
+    </script>
+</body>
+</html>

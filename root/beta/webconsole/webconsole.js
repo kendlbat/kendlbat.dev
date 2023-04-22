@@ -201,7 +201,7 @@ class WebConsole {
             showLoading = false;
             await loadingAnim;
             removeLoadingBar();
-            pyodide.runPython(`print(f'Python {sys.version})] on WebConsole\\nType "help", "copyright", "credits" or "license" for more information.')\nFor technical reasons, input prompts can only be seen in the browser console (F12)`);
+            pyodide.runPython(`print(f'Python {sys.version})] on WebConsole\\nType "help", "copyright", "credits" or "license" for more information.\\nFor technical reasons, input prompts can only be seen in the browser console (F12)')`);
 
             let pyError = false;
 
@@ -456,11 +456,6 @@ class WebConsole {
 
     constructor(container) {
         this.#container = container;
-
-        // Whenever new content is added, scroll to bottom
-        this.#container.addEventListener("DOMNodeInserted", () => {
-            this.#container.scrollTop = this.#container.scrollHeight;
-        });
 
         this.#container.classList.add("webconsole-container");
         this.#input = document.createElement("input");
