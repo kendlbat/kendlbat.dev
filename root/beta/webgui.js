@@ -24,6 +24,13 @@ class WebguiWindow {
         this.#id = id;
         this.#frame = document.createElement("iframe");
         this.#frame.src = source;
+        this.#frame.addEventListener("click", (e) => {
+            if (e.target.tagName === "A") {
+                e.preventDefault();
+                window.open(e.target.href, "_blank");
+            }
+        });
+
         this.#frame.classList.add("webgui-window");
     }
 
@@ -164,6 +171,8 @@ globalThis.initWebGui = async () => {
     if (!webgui.getActiveWindowId()) {
         webgui.openWindow(0);
     }
+
+    console.log("Webgui v" + globalThis.WEBCONSOLE_VERSIONID + "\n(c) Tobias Kendlbacher 2023");
 
     window.addEventListener("beforeunload", () => {
         localStorage.setItem("webguiActiveWindow", JSON.stringify({
