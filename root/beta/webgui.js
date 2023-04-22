@@ -135,6 +135,8 @@ class WebGui {
 }
 
 globalThis.initWebGui = async () => {
+    console.log("Webgui v" + globalThis.WEBCONSOLE_VERSIONID + "\n(c) Tobias Kendlbacher 2023");
+
     const iconManager = globalThis.iconManager;
 
     /**
@@ -171,8 +173,6 @@ globalThis.initWebGui = async () => {
     if (!webgui.getActiveWindowId()) {
         webgui.openWindow(0);
     }
-
-    console.log("Webgui v" + globalThis.WEBCONSOLE_VERSIONID + "\n(c) Tobias Kendlbacher 2023");
 
     window.addEventListener("beforeunload", () => {
         localStorage.setItem("webguiActiveWindow", JSON.stringify({
