@@ -1,0 +1,66 @@
+:root * {
+    box-sizing: border-box;
+
+    --webgui-taskbar-elem-gap: 5px;
+    --webgui-taskbar-height: min(max(50px, 10vh), 64px);
+    --webgui-taskbar-elem-width: var(--webgui-taskbar-height);
+    --webgui-taskbar-color: #333333;
+    --webgui-taskbar-elem-color-active: #888;
+}
+
+#webgui-container {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+}
+
+.webgui-window-container {
+    flex-grow: 1;
+}
+
+.webgui-window {
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.webgui-taskbar {
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: var(--webgui-taskbar-color);
+    color: #ffffff;
+
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    height: var(--webgui-taskbar-height);
+    font-size: var(--webgui-taskbar-height);
+    gap: var(--webgui-taskbar-elem-gap);
+}
+
+.webgui-taskbar-elem.active {
+    background-image: linear-gradient(to bottom, var(--webgui-taskbar-color) 0%, var(--webgui-taskbar-color) 80%, var(--webgui-taskbar-elem-color-active) 100%);
+    background-clip: content-box;
+
+}
+
+.webgui-taskbar-elem:first-child {
+    margin-left: var(--webgui-taskbar-elem-gap);
+}
+
+i.icon::before {
+    background-size: 1em;
+    background-repeat: no-repeat;
+    background-position: center;
+}
