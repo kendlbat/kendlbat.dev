@@ -35,7 +35,7 @@
             let loadIconManager = () => {
                 return new Promise((resolve, reject) => {
                     const iconManagerScript = document.createElement("script");
-                    iconManagerScript.src = "iconmanager.js?version=" + globalThis.WEBCONSOLE_VERSIONID;
+                    iconManagerScript.src = "iconManager.js?version=" + globalThis.WEBCONSOLE_VERSIONID;
                     iconManagerScript.type = "module";
                     document.head.appendChild(iconManagerScript);
 
