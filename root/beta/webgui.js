@@ -24,12 +24,16 @@ class WebguiWindow {
         this.#id = id;
         this.#frame = document.createElement("iframe");
         this.#frame.src = source;
-        this.#frame.addEventListener("click", (e) => {
-            if (e.target.tagName === "A") {
+        // Add url change listener
+        this.#frame.addEventListener("load", () => {
+            console.log("Loaded " + this.#frame.src);
+            this.#frame.contentWindow.addEventListener("beforeunload", (e) => {
                 e.preventDefault();
-                window.open(e.target.href, "_blank");
-            }
+                e.returnValue = "";
+                window.open(this.#frame.src, "_blank");
+            });
         });
+
 
         this.#frame.classList.add("webgui-window");
     }
