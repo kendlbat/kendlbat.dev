@@ -161,7 +161,6 @@ globalThis.initWebGui = async () => {
 
     if (!wasUsingOldVersion) {
         let prevActiveWindow = localStorage.getItem("webguiActiveWindow");
-        console.log(prevActiveWindow);
         if (prevActiveWindow) {
             prevActiveWindow = JSON.parse(prevActiveWindow);
             webgui.openWindow(prevActiveWindow.activeWindow);
