@@ -1,5 +1,5 @@
 
-document.addEventListener("DOMContentLoaded", async () => {
+globalThis.initIconManager = async () => {
     let url = "https://cdn.kde.org/breeze-icons/";
     let stylefile = "icons.css";
     console.log("ICONS:\nBreeze icons copyright KDE and licenced under the GNU LGPL version 3 or later\nhttps://develop.kde.org/frameworks/breeze-icons/");
@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     style.innerHTML = icons;
 
     document.head.appendChild(style);
-});
+};
 
 globalThis.iconManager = {
     createIcon: (iconName) => {

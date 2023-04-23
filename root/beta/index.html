@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
     <link rel="stylesheet" href="webgui.css">
-    <script defer type="module" src="iconManager.js"></script>
     <style>
-        #webgui-container { opacity: 0; }
+        #webgui-container {
+            opacity: 0;
+        }
 
         body {
             background-color: #000;
@@ -17,6 +19,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="webgui-container"></div>
     <noscript>
@@ -26,18 +29,46 @@
         </p>
     </noscript>
     <script>
-        globalThis.WEBCONSOLE_VERSIONID = "0.1.1";
-        const script = document.createElement("script");
-        script.src = "webgui.js?version=" + globalThis.WEBCONSOLE_VERSIONID;
-        script.type = "module";
-        document.head.appendChild(script);
+        globalThis.WEBCONSOLE_VERSIONID = "0.1.2";
 
-        script.addEventListener("load", () => {
-            document.getElementById("webgui-container").style.opacity = 1;
-        });
-        script.addEventListener("load", () => {
-            globalThis.initWebGui();
-        });
+        async function main() {
+            let loadIconManager = () => {
+                return new Promise((resolve, reject) => {
+                    const iconManagerScript = document.createElement("script");
+                    iconManagerScript.src = "iconmanager.js?version=" + globalThis.WEBCONSOLE_VERSIONID;
+                    iconManagerScript.type = "module";
+                    document.head.appendChild(iconManagerScript);
+
+                    iconManagerScript.addEventListener("load", async () => {
+                        await globalThis.initIconManager();
+                        resolve();
+                    });
+                });
+            }
+
+            let loadWebGui = () => {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement("script");
+                    script.src = "webgui.js?version=" + globalThis.WEBCONSOLE_VERSIONID;
+                    script.type = "module";
+                    document.head.appendChild(script);
+
+                    script.addEventListener("load", () => {
+                        document.getElementById("webgui-container").style.opacity = 1;
+                    });
+                    script.addEventListener("load", async () => {
+                        await globalThis.initWebGui();
+                        resolve();
+                    });
+                });
+            }
+
+            await loadIconManager();
+            await loadWebGui();
+        }
+
+        main();
     </script>
 </body>
+
 </html>
