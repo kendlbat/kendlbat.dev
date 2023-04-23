@@ -1,4 +1,3 @@
-
 globalThis.initIconManager = async () => {
     let url = "https://cdn.kde.org/breeze-icons/";
     let stylefile = "icons.css";

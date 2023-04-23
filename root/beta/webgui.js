@@ -24,17 +24,11 @@ class WebguiWindow {
         this.#id = id;
         this.#frame = document.createElement("iframe");
         this.#frame.src = source;
-        // Add url change listener
         this.#frame.addEventListener("load", () => {
-            console.log("Loaded " + this.#frame.src);
-            this.#frame.contentWindow.addEventListener("beforeunload", (e) => {
-                e.preventDefault();
-                e.returnValue = "";
-                window.open(this.#frame.src, "_blank");
-            });
+            let base = this.#frame.contentDocument.createElement("base");
+            base.target = "_blank";
+            this.#frame.contentDocument.head.appendChild(base);
         });
-
-
         this.#frame.classList.add("webgui-window");
     }
 
