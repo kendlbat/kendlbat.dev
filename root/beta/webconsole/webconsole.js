@@ -448,6 +448,172 @@ class WebConsole {
                 }
             }
         },
+        "chat": (args, stdout, stdin) => {
+            return new Promise(async (resolve, reject) => {
+                const trackers = [
+                    "wss://tracker.openwebtorrent.com",
+                    "wss://tracker.btorrent.xyz",
+                    "wss://tracker.files.fm:7073/announce"
+                ];
+    
+                const room = args[1] || "default";
+    
+                // Look for room on trackers
+                let peers = [];
+                
+                // Create websocket
+                let successfullConnections = trackers.length;
+
+                let connUnsuccessful = () => {
+                    successfullConnections--;
+                    if (successfullConnections === 0) {
+                        stdout("Could not connect to chat room.");
+                        resolve();
+                    }
+                }
+    
+                // digest room name and application id
+                let roomid = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(room + "kendlwebconsole"));
+    
+                const createTrackerConn = async (tracker) => {
+                    let ws = new WebSocket(tracker);
+                    ws.onopen = () => {
+                        ws.send(JSON.stringify({
+                            action: "announce",
+                            info_hash: roomid,
+                            numwant: 100,
+                            event: "started"
+                        }));
+                    }
+                    ws.onmessage = (msg) => {
+                        let data = JSON.parse(msg.data);
+                        if (data.action === "announce") {
+                            peers.push(...data.peers);
+                        }
+                    }
+                    return await new Promise((resolve, reject) => {
+                        ws.onopen = () => resolve(ws);
+                        ws.onerror = () =>  { connUnsuccessful(); resolve(); };
+                    });
+                }
+
+                let trackerConns = [];
+                for (let tracker of trackers) {
+                    trackerConns.push(createTrackerConn(tracker));
+                }
+
+                try {
+                    trackerConns = (await Promise.all(trackerConns));
+                } catch (e) {
+                    stdout("Could not connect to chat room.");
+                    resolve();
+                    return;
+                }
+
+                // Filter failed connections
+                console.log(trackerConns);
+                trackerConns = trackerConns.filter((ws) => ws);
+
+                // Cancel if no connections were successfull
+                if (trackerConns.length === 0) {
+                    stdout("Could not connect to chat room.");
+                    resolve();
+                    return;
+                }
+
+                // Create webrtc connections
+                let webrtcConns = [];
+                for (let peer of peers) {
+                    let conn = new RTCPeerConnection();
+                    conn.onicecandidate = (e) => {
+                        if (e.candidate) {
+                            trackerConns.forEach((ws) => {
+                                ws.send(JSON.stringify({
+                                    action: "announce",
+                                    info_hash: roomid,
+                                    numwant: 100,
+                                    event: "icecandidate",
+                                    candidate: e.candidate
+                                }));
+                            });
+                        }
+                    }
+                    conn.ondatachannel = (e) => {
+                        let channel = e.channel;
+                        channel.onmessage = (msg) => {
+                            stdout(msg.data);
+                        }
+                        channel.onopen = () => {
+                            stdout("Connected to chat room.");
+                            resolve();
+                        }
+                        channel.onclose = () => {
+                            stdout("Disconnected from chat room.");
+                            resolve();
+                        }
+                    }
+                    let channel = conn.createDataChannel("chat");
+                    channel.onopen = () => {
+                        stdout("Connected to chat room.");
+                        resolve();
+                    }
+                    channel.onclose = () => {
+                        stdout("Disconnected from chat room.");
+                        resolve();
+                    }
+                    webrtcConns.push(conn);
+                }
+
+                // Send ice candidates to peers
+                for (let conn of webrtcConns) {
+                    for (let otherConn of webrtcConns) {
+                        if (conn !== otherConn) {
+                            conn.onicecandidate = (e) => {
+                                if (e.candidate) {
+                                    otherConn.addIceCandidate(e.candidate);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Send ice candidates to trackers
+                for (let conn of webrtcConns) {
+                    for (let ws of trackerConns) {
+                        conn.onicecandidate = (e) => {
+                            if (e.candidate) {
+                                ws.send(JSON.stringify({
+                                    action: "announce",
+                                    info_hash: roomid,
+                                    numwant: 100,
+                                    event: "icecandidate",
+                                    candidate: e.candidate
+                                }));
+                            }
+                        }
+                    }
+                }
+
+                // Message handling
+                stdin("Connected to chat room. Type /exit to leave.");
+                while (true) {
+                    let msg = await stdin(" : ");
+                    if (msg === "/exit") {
+                        for (let conn of webrtcConns) {
+                            conn.close();
+                        }
+                        for (let ws of trackerConns) {
+                            ws.close();
+                        }
+                        resolve();
+                        break;
+                    }
+                    for (let conn of webrtcConns) {
+                        conn.send({data: msg});
+                    }
+                }
+            });
+        },
         "exit": async (args, stdout, stdin) => {
             while (!(await stdin("Please press Ctrl+W to exit...")) != "^W") { }
         },
