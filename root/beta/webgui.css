@@ -2,7 +2,7 @@
     box-sizing: border-box;
 
     --webgui-taskbar-elem-gap: 5px;
-    --webgui-taskbar-height: min(max(50px, 10vh), 64px);
+    --webgui-taskbar-height: 40px;/*min(max(40px, 10vh), 40px);*/
     --webgui-taskbar-elem-width: var(--webgui-taskbar-height);
     --webgui-taskbar-color: #333333;
     --webgui-taskbar-elem-color-active: #888;
