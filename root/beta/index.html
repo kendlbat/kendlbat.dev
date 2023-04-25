@@ -6,7 +6,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
-    <link rel="stylesheet" href="webgui.css">
     <style>
         #webgui-container {
             opacity: 0;
@@ -32,6 +31,19 @@
         globalThis.WEBCONSOLE_VERSIONID = "0.1.6";
 
         async function main() {
+            let loadStylesheet = () => {
+                return new Promise((resolve, reject) => {
+                    const stylesheet = document.createElement("link");
+                    stylesheet.rel = "stylesheet";
+                    stylesheet.href = "webgui.css?version=" + globalThis.WEBCONSOLE_VERSIONID;
+                    document.head.appendChild(stylesheet);
+
+                    stylesheet.addEventListener("load", () => {
+                        resolve();
+                    });
+                });
+            }
+
             let loadIconManager = () => {
                 return new Promise((resolve, reject) => {
                     const iconManagerScript = document.createElement("script");
@@ -63,6 +75,7 @@
                 });
             }
 
+            loadStylesheet();
             await loadIconManager();
             await loadWebGui();
         }
