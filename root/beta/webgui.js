@@ -31,9 +31,11 @@ class WebguiWindow {
         this.#frame = document.createElement("iframe");
         this.#frame.src = source;
         this.#frame.addEventListener("load", () => {
-            let base = this.#frame.contentDocument.createElement("base");
-            base.target = "_blank";
-            this.#frame.contentDocument.head.appendChild(base);
+            if (this.#frame.contentDocument) {
+                let base = this.#frame.contentDocument.createElement("base");
+                base.target = "_blank";
+                this.#frame.contentDocument.head.appendChild(base);
+            }
         });
         this.#frame.classList.add("webgui-window");
     }
@@ -76,7 +78,7 @@ class WebGui {
 
     /**
      * @type {{[id: number]: WebguiWindow}}
-     */ 
+     */
 
     #webguiIdCnt = 0;
 
@@ -108,7 +110,7 @@ class WebGui {
             throw new Error("Human readable id already exists");
         }
 
-        this.#windows[id] = {source, humanReadableId, taskbarIcon};
+        this.#windows[id] = { source, humanReadableId, taskbarIcon };
         taskbarIcon.addEventListener("click", () => {
             this.openWindow(id);
         });
@@ -130,7 +132,7 @@ class WebGui {
         let prevActiveWindow = this.#activeWindow;
 
         if (!this.#windows[id].window) {
-            let window = new WebguiWindow(id, this.#windows[id].humanReadableId,this.#windows[id].source, this.#windows[id].taskbarIcon);
+            let window = new WebguiWindow(id, this.#windows[id].humanReadableId, this.#windows[id].source, this.#windows[id].taskbarIcon);
             this.#windows[id].window = window;
         }
         let windownew = this.#windows[id].window;
@@ -144,7 +146,7 @@ class WebGui {
         this.#windows[id].taskbarIcon.classList.add("active");
 
         // Push window id to anchor
-        
+
         this.#activeWindow.getFrame().focus();
         window.location.hash = "#" + this.#activeWindow.humanReadableId;
         return windownew;
@@ -200,10 +202,10 @@ globalThis.initWebGui = async () => {
 
     /* ADD WINDOWS HERE */
 
-    webgui.addWindow("webconsole/index.html", "webconsole", iconManager.createIcon("akonadiconsole"));
-    webgui.addWindow("https://edu.kendlbat.dev/", "eduweb", iconManager.createIcon("education"));
-    //webgui.addWindow("https://browsergames.pages.dev/", createIcon(""));
-    webgui.addWindow("misc/about.html", "about", iconManager.createIcon("help-about"));
+    webgui.addWindow("webconsole/index.html", "webconsole", iconManager.createIcon("terminal"));
+    webgui.addWindow("https://edu.kendlbat.dev/", "eduweb", iconManager.createIcon("book"));
+    webgui.addWindow("https://browsergames.pages.dev/", "browsergames", iconManager.createIcon("controller"));
+    webgui.addWindow("misc/about.html", "about", iconManager.createIcon("info-circle"));
 
     /* ----- */
 

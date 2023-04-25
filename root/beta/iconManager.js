@@ -1,7 +1,37 @@
+/**
+ * 
+ * @param {string} url 
+ * @returns {Promise<string>}
+ */
+async function iconManagerCacheURL(url) {
+    let data = localStorage.getItem("iconManagerCache" + url);
+    if (data) {
+        return data;
+    }
+
+    let response = await fetch(url);
+    data = await response.arrayBuffer();
+    let blob = new Blob([data], {type: response.headers.get("content-type")});
+    let dataUrl = await new Promise((resolve) => {
+        let reader = new FileReader();
+        reader.onload = () => {
+            resolve(reader.result);
+        };
+        reader.readAsDataURL(blob);
+    });
+    localStorage.setItem("iconManagerCache" + url, dataUrl);
+    return dataUrl;
+}
+
 globalThis.initIconManager = async () => {
-    let url = "https://cdn.kde.org/breeze-icons/";
-    let stylefile = "icons.css";
-    console.log("ICONS:\nBreeze icons copyright KDE and licenced under the GNU LGPL version 3 or later\nhttps://develop.kde.org/frameworks/breeze-icons/");
+    let url = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.4/font/";
+    let stylefile = "bootstrap-icons.css";
+
+    let version = localStorage.getItem("lastVersion");
+    if (version !== globalThis.WEBCONSOLE_VERSIONID) {
+        localStorage.clear();
+        localStorage.setItem("lastVersion", globalThis.WEBCONSOLE_VERSIONID);
+    }
 
     let icons = localStorage.getItem("icons");
     if (!icons) {
@@ -12,9 +42,21 @@ globalThis.initIconManager = async () => {
         console.log("Using cached icons");
     }
 
-    icons = icons.replace(/url\(([\"\']?)([^\"\')]+)([\"\']?)\)/g, (match, p1, p2, p3) => {
-        return "url(" + url + p2 + ")";
-    });
+    // Create a list of replacements
+    let matches = [];
+    let iconMatches = icons.matchAll(/url\(([\"\']?)([^\"\')]+)([\"\']?)\)/g);
+
+    for (let match of iconMatches) {
+        matches.push({
+            match: match[0],
+            url: match[2]
+        });
+    }
+
+    for (let match of matches) {
+        icons = icons.replace(match.match, "url(" + await iconManagerCacheURL(url + match.url) + ")");
+    }
+
     let style = document.createElement("style");
     style.innerHTML = icons;
 
@@ -24,8 +66,8 @@ globalThis.initIconManager = async () => {
 globalThis.iconManager = {
     createIcon: (iconName) => {
         let icon = document.createElement("i");
-        icon.classList.add("icon");
-        icon.classList.add("icon_" + iconName);
+        icon.classList.add("bi");
+        icon.classList.add("bi-" + iconName);
         return icon;
     }
 };

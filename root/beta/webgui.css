@@ -59,8 +59,13 @@
     margin-left: var(--webgui-taskbar-elem-gap);
 }
 
-i.icon::before {
-    background-size: 1em;
-    background-repeat: no-repeat;
-    background-position: center;
+.webgui-taskbar-elem {
+    display: block;
+}
+
+i.bi::before {
+    vertical-align: 20%;
+    font-size: 0.8em;
+    text-align: center;
+    width: var(--webgui-taskbar-elem-width);
 }
