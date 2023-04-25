@@ -33,6 +33,10 @@
     margin: 0;
 }
 
+.webgui-iframe {
+    background-color: #ffffff;
+}
+
 .webgui-taskbar {
     flex-grow: 0;
     flex-shrink: 0;
