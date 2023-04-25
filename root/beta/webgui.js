@@ -30,6 +30,7 @@ class WebguiWindow {
         this.#humanReadableId = humanReadableId;
         this.#frame = document.createElement("iframe");
         this.#frame.src = source;
+        this.#frame.title = humanReadableId;
         this.#frame.addEventListener("load", () => {
             if (this.#frame.contentDocument) {
                 let base = this.#frame.contentDocument.createElement("base");
