@@ -10,6 +10,11 @@ class WebguiWindow {
     #id;
 
     /**
+     * @type {string}
+     */
+    #humanReadableId;
+
+    /**
      * @type {HTMLElement}
      */
     #taskbarButton;
@@ -20,8 +25,9 @@ class WebguiWindow {
      * @param {string} source 
      * @param {HTMLElement} taskbarIcon
      */
-    constructor(id, source) {
+    constructor(id, humanReadableId, source) {
         this.#id = id;
+        this.#humanReadableId = humanReadableId;
         this.#frame = document.createElement("iframe");
         this.#frame.src = source;
         this.#frame.addEventListener("load", () => {
@@ -32,8 +38,12 @@ class WebguiWindow {
         this.#frame.classList.add("webgui-window");
     }
 
-    getId() {
+    get id() {
         return this.#id;
+    }
+
+    get humanReadableId() {
+        return this.#humanReadableId;
     }
 
     getFrame() {
@@ -43,12 +53,24 @@ class WebguiWindow {
 
 class WebGui {
     #taskbar = null;
+
+    /**
+     * @type {HTMLElement}
+     */
     #container;
+
+    /**
+     * @type {HTMLIFrameElement}
+     */
     #windowContainer;
+
+    /**
+     * @type {WebguiWindow}
+     */
     #activeWindow;
 
     /**
-     * @type {{[id: number]: {source: string, taskbarIcon: HTMLImageElement, window: WebguiWindow | undefined}}}
+     * @type {{[id: number]: {source: string, humanReadableId: string, taskbarIcon: HTMLImageElement, window: WebguiWindow | undefined}}}
      */
     #windows = {};
 
@@ -80,9 +102,13 @@ class WebGui {
      * 
      * @param {WebguiWindow} window 
      */
-    addWindow(source, taskbarIcon) {
+    addWindow(source, humanReadableId, taskbarIcon) {
         let id = this.#requestWindowId();
-        this.#windows[id] = {source, taskbarIcon};
+        if (Object.values(this.#windows).find((window) => window.humanReadableId === humanReadableId)) {
+            throw new Error("Human readable id already exists");
+        }
+
+        this.#windows[id] = {source, humanReadableId, taskbarIcon};
         taskbarIcon.addEventListener("click", () => {
             this.openWindow(id);
         });
@@ -97,32 +123,61 @@ class WebGui {
      */
     openWindow(id) {
         // console.log("Opening window " + id);
-        if (this.#activeWindow?.getId() === id) {
+        if (this.#activeWindow?.id === id) {
             this.#activeWindow.getFrame().focus();
             return this.#activeWindow;
         }
         let prevActiveWindow = this.#activeWindow;
 
         if (!this.#windows[id].window) {
-            let window = new WebguiWindow(id, this.#windows[id].source, this.#windows[id].taskbarIcon);
+            let window = new WebguiWindow(id, this.#windows[id].humanReadableId,this.#windows[id].source, this.#windows[id].taskbarIcon);
             this.#windows[id].window = window;
         }
-        let window = this.#windows[id].window;
-        this.#activeWindow = window;
+        let windownew = this.#windows[id].window;
+        this.#activeWindow = windownew;
         this.#windowContainer.innerHTML = "";
-        this.#windowContainer.appendChild(window.getFrame());
+        this.#windowContainer.appendChild(windownew.getFrame());
 
         if (prevActiveWindow) {
-            this.#taskbar.querySelector(".webgui-taskbar-elem-" + prevActiveWindow.getId()).classList.remove("active");
+            this.#taskbar.querySelector(".webgui-taskbar-elem-" + prevActiveWindow.id).classList.remove("active");
         }
         this.#windows[id].taskbarIcon.classList.add("active");
 
+        // Push window id to anchor
+        
         this.#activeWindow.getFrame().focus();
-        return window;
+        window.location.hash = "#" + this.#activeWindow.humanReadableId;
+        return windownew;
     }
 
+    /**
+     * 
+     * @param {string} humanReadableId 
+     * @returns {WebguiWindow}
+     */
+    openWindowHRID(humanReadableId) {
+        // Open window by human readable id
+        let id = Object.keys(this.#windows).find((id) => this.#windows[id].humanReadableId === humanReadableId);
+        if (id !== undefined) {
+            return this.openWindow(id);
+        }
+        return null;
+    }
+
+    /**
+     * 
+     * @returns {number}
+     */
     getActiveWindowId() {
-        return this.#activeWindow?.getId();
+        return this.#activeWindow?.id;
+    }
+
+    /**
+     * 
+     * @returns {WebguiWindow}
+     */
+    getActiveWindow() {
+        return this.#activeWindow;
     }
 
     static createWindowIconFromURL(src) {
@@ -145,9 +200,10 @@ globalThis.initWebGui = async () => {
 
     /* ADD WINDOWS HERE */
 
-    webgui.addWindow("webconsole", iconManager.createIcon("akonadiconsole"));
+    webgui.addWindow("webconsole/index.html", "webconsole", iconManager.createIcon("akonadiconsole"));
+    webgui.addWindow("https://edu.kendlbat.dev/", "eduweb", iconManager.createIcon("education"));
     //webgui.addWindow("https://browsergames.pages.dev/", createIcon(""));
-    webgui.addWindow("misc/about.html", iconManager.createIcon("help-about"));
+    webgui.addWindow("misc/about.html", "about", iconManager.createIcon("help-about"));
 
     /* ----- */
 
@@ -167,7 +223,20 @@ globalThis.initWebGui = async () => {
         }
     }
 
-    if (!webgui.getActiveWindowId()) {
+    window.addEventListener("hashchange", () => {
+        if (window.location.hash) {
+            let hash = new String(window.location.hash).substring(1);
+            let newwindow = webgui.openWindowHRID(hash);
+        }
+    });
+
+    if (window.location.hash) {
+        let hash = new String(window.location.hash).substring(1);
+        let newwindow = webgui.openWindowHRID(hash);
+        if (newwindow == null) {
+            webgui.openWindow(0);
+        }
+    } else {
         webgui.openWindow(0);
     }
 
