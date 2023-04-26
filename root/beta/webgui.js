@@ -29,6 +29,7 @@ class WebguiWindow {
         this.#id = id;
         this.#humanReadableId = humanReadableId;
         this.#frame = document.createElement("iframe");
+        this.#frame.style.backgroundColor = "black";
         this.#frame.classList.add("webgui-iframe");
         this.#frame.src = source;
         this.#frame.title = humanReadableId;
@@ -38,6 +39,7 @@ class WebguiWindow {
                 base.target = "_blank";
                 this.#frame.contentDocument.head.appendChild(base);
             }
+            this.#frame.backgroundColor = "";
         });
         this.#frame.classList.add("webgui-window");
     }
