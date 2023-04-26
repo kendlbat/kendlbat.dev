@@ -3,6 +3,7 @@
 
     --webgui-taskbar-elem-gap: 5px;
     --webgui-taskbar-height: 40px;/*min(max(40px, 10vh), 40px);*/
+    --webgui-taskbar-icon-size: 32px;
     --webgui-taskbar-elem-width: var(--webgui-taskbar-height);
     --webgui-taskbar-color: #333333;
     --webgui-taskbar-elem-color-active: #888;
@@ -69,8 +70,12 @@
 }
 
 i.bi::before {
-    vertical-align: 20%;
-    font-size: 0.8em;
+    /* offset text vertically */
+    display: inline-block;
+    height: var(--webgui-taskbar-height);
+    line-height: var(--webgui-taskbar-height);
+    font-size: var(--webgui-taskbar-icon-size);
     text-align: center;
+    vertical-align: top;
     width: var(--webgui-taskbar-elem-width);
 }
