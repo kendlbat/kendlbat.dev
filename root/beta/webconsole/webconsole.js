@@ -1,3 +1,80 @@
+class StdWorker {
+    #source;
+    #stdout;
+    #stdin;
+    #listeners = [];
+    #worker;
+    #logging = false;
+
+    constructor(source, stdout, stdin) {
+        this.#stdout = stdout;
+        this.#stdin = stdin;
+        this.#source = source;
+    }
+
+    onRequest(type, cbf) {
+        let fun = (e) => {
+            if (e.data.type == type) {
+                cbf(e.data);
+            }
+        }
+        this.#listeners.push(fun);
+        return fun;
+    }
+
+    removeRequest(fun) {
+        this.#listeners.splice(this.#listeners.indexOf(fun), 1);
+    }
+
+    sendMessage(type, data) {
+        if (!this.#worker) throw new Error("Worker not started");
+        if (this.#logging) console.log({ type: type, data: data });
+        this.#worker.postMessage({ type: type, data: data });
+    }
+
+    enableLogging() {
+        this.#logging = true;
+    }
+
+    disableLogging() {
+        this.#logging = false;
+    }
+
+    async run() {
+        return await new Promise((resolve) => {
+            let worker = new Worker(this.#source);
+            this.#worker = worker;
+
+            let stdoutinterrupt = null;
+
+            this.#listeners.push(async (e) => {
+                if (this.#logging) console.log(e.data);
+                if (e.data.type == "stdout") {
+                    let out = JSON.parse(e.data.data);
+                    if (typeof out == "object") {
+                        out = JSON.stringify(out);
+                    }
+                    this.#stdout(out);
+                } else if (e.data.type == "stdin") {
+                    let prompt = JSON.parse(e.data.data);
+                    if (prompt === undefined) prompt = "";
+
+                    let input = await this.#stdin(prompt);
+
+                    worker.postMessage({ type: "stdin", data: input });
+                } else if (e.data.type == "exit") {
+                    resolve();
+                }
+            });
+
+            this.#listeners.forEach((listener) => {
+                worker.addEventListener("message", listener);
+            });
+            worker.postMessage({ type: "start" });
+        });
+    }
+}
+
 class WebConsole {
     static VERSION = VERSIONID || "N/A";
 
@@ -161,114 +238,22 @@ class WebConsole {
             };
 
             let showLoading = true;
-            let loadingAnim = animateLoadingBar("Loading pyodide script... ", () => showLoading);
-            await this.#loadScript(WebConsole.#pyoditeURL);
-            showLoading = false;
-            await loadingAnim;
+            let loadingAnim = animateLoadingBar("Loading pyodide... ", () => showLoading);
 
-            showLoading = true;
-            loadingAnim = animateLoadingBar("Loading pyodide... ", () => showLoading);
-            let pyodide = await loadPyodide({
-                stdout: (text) => {
-                    stdout(text)
-                    console.log(text);
-                }
+            let worker = new StdWorker("workers/python.js", stdout, stdin);
+            worker.enableLogging();
+            worker.onRequest("pypackages", async () => {
+                worker.sendMessage("pypackages", this.#pypackages);
             });
-            showLoading = false;
-            await loadingAnim;
 
-            showLoading = true;
-            loadingAnim = animateLoadingBar("Installing python packages... ", () => showLoading);
-            // Install packages with micropip
-            await pyodide.loadPackage("micropip");
-            await pyodide.runPythonAsync("import micropip");
-            let installpromises = this.#pypackages.map((pkg) => {
-                return (async () => {
-                    try {
-                        await pyodide.runPythonAsync(`await micropip.install("${pkg}")`);
-                    } catch (e) {
-                        stdout('Error while installing python package "' + pkg + '"');
-                    }
-                })();
+            worker.onRequest("ready", async () => {
+                showLoading = false;
+                await loadingAnim;
+                removeLoadingBar();
+                worker.sendMessage("ready");
             });
-            await Promise.all(installpromises);
-            showLoading = false;
-            await loadingAnim;
 
-            showLoading = true;
-            loadingAnim = animateLoadingBar("Loading python packages... ", () => showLoading);
-            await pyodide.runPythonAsync("import sys");
-            showLoading = false;
-            await loadingAnim;
-            removeLoadingBar();
-            pyodide.runPython(`print(f'Python {sys.version})] on WebConsole\\nType "help", "copyright", "credits" or "license" for more information.\\nFor technical reasons, input prompts can only be seen in the browser console (F12)')`);
-
-            let pyError = false;
-
-            do {
-                let code = "";
-                let input = await stdin(">>> ");
-
-                // If input starts with "^", ctrl command
-
-                if (input.startsWith("^")) {
-                    let cmd = input.substring(1);
-                    switch (cmd) {
-                        case "C":
-                            // Send keyboard interrupt
-                            code = "raise KeyboardInterrupt()";
-                            break;
-                        default:
-                            // Just type it in
-                            code = input;
-                            break;
-                    }
-                } else code = input;
-
-                if (input.endsWith(":")) {
-                    // next line
-                    let nextline = await stdin("... ");
-                    code += nextline;
-
-                    // if empty line is found
-                    while (nextline !== "") {
-                        nextline = await stdin("... ");
-                        if (nextline.startsWith("^")) {
-                            code = "raise KeyboardInterrupt()";
-                            break;
-                        } else
-                            code += "\n" + nextline;
-                    }
-                }
-
-                // Run python
-                try {
-                    pyError = false;
-                    let output = pyodide.runPython(code);
-                    if (output !== undefined)
-                        stdout(output);
-                } catch (e) {
-                    if (new String(e).match(/\nSystemExit/m)) {
-                        pyError = true;
-                        break;
-                    }
-                    // Remove pyodite error message from stack trace (Starts with "PythonError: Traceback (most recent call last):")
-                    // Up until File "<exec>", line 1, in <module>
-                    if (new String(e).match(/^PythonError: Traceback \(most recent call last\):/m)) {
-                        let lines = new String(e).split("\n");
-                        let i = 0;
-                        for (; i < lines.length; i++) {
-                            if (lines[i].match(/^[\s]*File "<exec>", line 1, in <module>/m))
-                                break;
-                        }
-                        e = lines.slice(i + 1).join("\n");
-                    }
-                    stdout(e);
-                }
-
-
-            } while (!pyError);
-
+            await worker.run();
         },
         "pyrun": async (args, stdout, stdin) => {
             let file;
@@ -344,71 +329,33 @@ class WebConsole {
             }
 
             showLoading = true;
-            loadingAnim = animateLoadingBar("Loading pyodide script... ", () => showLoading);
-            await this.#loadScript(WebConsole.#pyoditeURL);
-            showLoading = false;
-            await loadingAnim;
+            loadingAnim = animateLoadingBar("Loading pyodide... ", () => showLoading);
+            
+            let worker = new StdWorker("workers/pyrun.js", stdout, stdin);
+            worker.enableLogging();
+            worker.onRequest("pypackages", async () => {
+                worker.sendMessage("pypackages", this.#pypackages);
+            });
+
+            worker.onRequest("ready", async () => {
+                showLoading = false;
+                await loadingAnim;
+                removeLoadingBar();
+                worker.sendMessage("ready");
+            });
+
+            worker.onRequest("args", async () => {
+                worker.sendMessage("args", JSON.stringify(args));
+            });
+
+            worker.onRequest("file", async () => {
+                worker.sendMessage("file", file);
+            });
+
+            await worker.run();
 
             showLoading = true;
             loadingAnim = animateLoadingBar("Loading pyodide... ", () => showLoading);
-            let pyodide = await loadPyodide({
-                stdout: (text) => {
-                    stdout(text);
-                    console.log(text);
-                }
-            });
-            showLoading = false;
-            await loadingAnim;
-
-            showLoading = true;
-            loadingAnim = animateLoadingBar("Installing python packages... ", () => showLoading);
-            // Install packages with micropip
-            await pyodide.loadPackage("micropip");
-            await pyodide.runPythonAsync("import micropip");
-            let installpromises = this.#pypackages.map((pkg) => {
-                return (async () => {
-
-                    try {
-                        await pyodide.runPythonAsync(`await micropip.install("${pkg}")`);
-                    } catch (e) {
-                        stdout("Error while installing python package " + pkg + ": " + e);
-                    }
-                })();
-            });
-            await Promise.all(installpromises);
-
-            showLoading = false;
-            await loadingAnim;
-
-
-            showLoading = true;
-            loadingAnim = animateLoadingBar("Loading python packages... ", () => showLoading);
-            await pyodide.runPythonAsync("import sys");
-            showLoading = false;
-            await loadingAnim;
-
-            stdout("For technical reasons, input prompts can only be seen in the browser console (F12)");
-
-            // Run python file
-            try {
-                let output = pyodide.runPython(file);
-                if (output !== undefined)
-                    stdout(output);
-            } catch (e) {
-                // Remove pyodite error message from stack trace (Starts with "PythonError: Traceback (most recent call last):")
-                // Up until File "<exec>", line 1, in <module>
-                if (new String(e).match(/^PythonError: Traceback \(most recent call last\):/m)) {
-                    let lines = new String(e).split("\n");
-                    let i = 0;
-                    for (; i < lines.length; i++) {
-                        if (lines[i].match(/^[\s]*File "<exec>", line 1, in <module>/m))
-                            break;
-                    }
-                    e = lines.slice(i + 1).join("\n");
-                }
-                stdout(e);
-            }
-
         },
         "pypkg": async (args, stdout) => {
             if (args.length < 3) {
@@ -776,6 +723,10 @@ class WebConsole {
                     // Set tab width to 4 spaces
                     // Set cursor in input to appropriate position
                 } else if (e.ctrlKey) {
+                    // Do not override CTRL+V
+                    if (e.shiftKey) {
+                        return;
+                    }
                     // If letter key
                     if (e.key.length === 1) {
                         if (tmppromtelem)
