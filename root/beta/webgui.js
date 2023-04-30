@@ -194,7 +194,7 @@ class WebGui {
 }
 
 globalThis.initWebGui = async () => {
-    console.log("Webgui v" + globalThis.WEBCONSOLE_VERSIONID + "\n(c) Tobias Kendlbacher 2023");
+    console.log("Webgui v" + globalThis.WEBGUI_VERSIONID + "\n(c) Tobias Kendlbacher 2023");
 
     const iconManager = globalThis.iconManager;
 
@@ -217,8 +217,8 @@ globalThis.initWebGui = async () => {
     let wasUsingOldVersion = false;
 
     let lastUsedVersion = localStorage.getItem("lastUsedVersion");
-    if (lastUsedVersion !== globalThis.WEBCONSOLE_VERSIONID) {
-        localStorage.setItem("lastUsedVersion", globalThis.WEBCONSOLE_VERSIONID);
+    if (lastUsedVersion !== globalThis.WEBGUI_VERSIONID) {
+        localStorage.setItem("lastUsedVersion", globalThis.WEBGUI_VERSIONID);
         wasUsingOldVersion = true;
     }
 
