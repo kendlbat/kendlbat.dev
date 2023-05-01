@@ -537,7 +537,12 @@ class WebConsole {
         });
         this.#output = document.createElement("div");
         this.#output.classList.add("webconsole-output");
-        this.#output.innerHTML = "WebConsole v" + WebConsole.VERSION + "\n(c) Tobias Kendlbacher 2023 - MIT License\nType 'help' for a list of commands.\n\n";
+        this.#output.innerHTML = "WebConsole v" + WebConsole.VERSION + "\n(c) Tobias Kendlbacher 2023 - MIT License\nType 'help' for a list of commands.\n";
+        // Detect mobile
+        if (window.innerWidth < 800) {
+            this.#output.innerHTML += "Mobile detected. This console is currently unsupported on mobile devices and you may experience issues.\n";
+        }
+        this.#output.innerHTML += "\n";
         this.#container.appendChild(this.#output);
         this.#container.appendChild(this.#inputcontainer);
         this.#newInputLine();
