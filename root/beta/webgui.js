@@ -33,14 +33,48 @@ class WebguiWindow {
         this.#frame.classList.add("webgui-iframe");
         this.#frame.src = source;
         this.#frame.title = humanReadableId;
+        const parentWindow = window;
         this.#frame.addEventListener("load", () => {
             if (this.#frame.contentDocument) {
                 let base = this.#frame.contentDocument.createElement("base");
                 base.target = "_blank";
                 this.#frame.contentDocument.head.appendChild(base);
+
+                // Replace all hash hrefs with onclick
+                let links = this.#frame.contentDocument.querySelectorAll("a");
+                for (let i = 0; i < links.length; i++) {
+                    let link = links[i];
+                    let url = new URL(link.href);
+                    if (!url.pathname) {
+                        url.pathname = parentWindow.location.pathname;
+                    }
+                    if (!url.origin) {
+                        url.origin = parentWindow.location.origin;
+                    }
+                    console.log(url);
+                    if (url.pathname === this.#frame.contentWindow.location.pathname && url.origin === this.#frame.contentWindow.location.origin) {
+                        if (link.href.includes("#")) {
+                            link.href = undefined;
+                            let hash = url.hash.substring(1);
+                            link.onclick = (e) => {
+                                e.preventDefault();
+                                parentWindow.location.hash = "#" + this.#humanReadableId + "/" + hash;
+                            };
+                        }
+                    }
+                }
+
+                this.#frame.contentWindow.hashChange = (hash) => {
+                    parentWindow.location.hash = "#" + this.#humanReadableId + "/" + hash;
+                };
+
+                this.#frame.contentWindow.addEventListener("hashchange", () => {
+                    window.location.hash = "#" + this.#humanReadableId + "/" + this.#frame.contentWindow.location.hash.substring(1);
+                });
             }
             this.#frame.backgroundColor = "";
         });
+
         this.#frame.classList.add("webgui-window");
     }
 
@@ -145,9 +179,9 @@ class WebGui {
         if (hash.includes("/")) {
             windowhash = hash.substring(hash.indexOf("/") + 1);
         }
-
-        if (this.#activeWindow?.id === id) {
+        if (this.#activeWindow?.id == id) {
             this.#activeWindow.getFrame().focus();
+            console.log("Window already open");
             if (windowhash) {
                 this.#activeWindow.setHash(windowhash);
             }
