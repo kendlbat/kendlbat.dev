@@ -182,7 +182,7 @@ class WebGui {
         // Push window id to anchor
 
         this.#activeWindow.getFrame().focus();
-        if (windowhash) {
+        if (!prevActiveWindow && windowhash) {
             window.location.hash = "#" + this.#activeWindow.humanReadableId + "/" + windowhash;
         } else {
             window.location.hash = "#" + this.#activeWindow.humanReadableId;
