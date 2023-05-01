@@ -59,7 +59,7 @@ class PythonWorkerAPI {
     }
     
     static stdout(data) {
-        self.postMessage({ type: "stdout", data: data });
+        self.postMessage({ type: "stdout", data: JSON.stringify(data) });
     }
     
     static exit(code) {
@@ -81,7 +81,7 @@ async function stdin(prompt) {
 }
 
 async function stdout(data) {
-    PythonWorkerAPI.stdout(JSON.stringify(data));
+    PythonWorkerAPI.stdout(data);
 }
 
 async function main() {
@@ -124,7 +124,7 @@ async function main() {
 
     await PythonWorkerAPI.requestResponse("ready", null);
 
-    await pyodide.runPythonAsync(`print(f'Python {sys.version})] on WebConsole\\nType "help", "copyright", "credits" or "license" for more information.')`);
+    await pyodide.runPythonAsync(`print(f'Python {sys.version})] on WebConsole\\nType "copyright()", "credits()" or "license()" for more information.')`);
 
     let pyError = false;
 

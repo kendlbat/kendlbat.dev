@@ -50,7 +50,9 @@ class StdWorker {
             this.#listeners.push(async (e) => {
                 if (this.#logging) console.log(e.data);
                 if (e.data.type == "stdout") {
-                    let out = JSON.parse(e.data.data);
+                    let out;
+                    if (!e.data.data) out = "";
+                    else out = JSON.parse(e.data.data);
                     if (typeof out == "object") {
                         out = JSON.stringify(out);
                     }
