@@ -819,7 +819,7 @@ function initMainWebconsole() {
     });
 
     let url = new URL(window.location.href);
-    let command = url.hash.substring(1);
+    let command = decodeURIComponent(url.hash.substring(1));
     if (command) {
         mainconsole.sendCommand(command);
     }
