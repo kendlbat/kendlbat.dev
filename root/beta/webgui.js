@@ -51,7 +51,6 @@ class WebguiWindow {
                     if (!url.origin) {
                         url.origin = parentWindow.location.origin;
                     }
-                    console.log(url);
                     if (url.pathname === this.#frame.contentWindow.location.pathname && url.origin === this.#frame.contentWindow.location.origin) {
                         if (link.href.includes("#")) {
                             link.href = undefined;
@@ -181,7 +180,6 @@ class WebGui {
         }
         if (this.#activeWindow?.id == id) {
             this.#activeWindow.getFrame().focus();
-            console.log("Window already open");
             if (windowhash) {
                 this.#activeWindow.setHash(windowhash);
             }
