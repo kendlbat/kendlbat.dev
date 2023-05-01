@@ -182,7 +182,11 @@ class WebGui {
         // Push window id to anchor
 
         this.#activeWindow.getFrame().focus();
-        window.location.hash = "#" + this.#activeWindow.humanReadableId;
+        if (windowhash) {
+            window.location.hash = "#" + this.#activeWindow.humanReadableId + "/" + windowhash;
+        } else {
+            window.location.hash = "#" + this.#activeWindow.humanReadableId;
+        }
         return windownew;
     }
 
