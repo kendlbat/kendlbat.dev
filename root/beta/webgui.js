@@ -90,9 +90,16 @@ class WebguiWindow {
     }
 
     setHash(hash) {
-        let url = new URL(this.#frame.src);
-        url.hash = hash;
-        this.#frame.src = url.toString();
+        if (hash) {
+            let url = new URL(this.#frame.src);
+            url.hash = hash;
+            this.#frame.src = url.toString();
+        } else {
+            // Remove hash (between # and ?)
+            let url = new URL(this.#frame.src);
+            url.hash = "";
+            this.#frame.src = url.toString();
+        }
     }
 }
 
@@ -201,6 +208,8 @@ class WebGui {
         let windownew = this.#windows[id].window;
         if (windowhash) {
             windownew.setHash(windowhash);
+        } else {
+            windownew.setHash(undefined);
         }
         this.#activeWindow = windownew;
         this.#windowContainer.innerHTML = "";
