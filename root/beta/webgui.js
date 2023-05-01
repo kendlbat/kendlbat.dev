@@ -55,6 +55,12 @@ class WebguiWindow {
     getFrame() {
         return this.#frame;
     }
+
+    setHash(hash) {
+        let url = new URL(this.#frame.src);
+        url.hash = hash;
+        this.#frame.src = url.toString();
+    }
 }
 
 class WebGui {
@@ -114,6 +120,10 @@ class WebGui {
             throw new Error("Human readable id already exists");
         }
 
+        if (humanReadableId.includes("/")) {
+            throw new Error("Human readable id cannot contain slash");
+        }
+
         this.#windows[id] = { source, humanReadableId, taskbarIcon };
         taskbarIcon.addEventListener("click", () => {
             this.openWindow(id);
@@ -129,17 +139,37 @@ class WebGui {
      */
     openWindow(id) {
         // console.log("Opening window " + id);
+
+        let hash = window.location.hash;
+        let windowhash = "";
+        if (hash.includes("/")) {
+            windowhash = hash.substring(hash.indexOf("/") + 1);
+        }
+
         if (this.#activeWindow?.id === id) {
             this.#activeWindow.getFrame().focus();
+            if (windowhash) {
+                this.#activeWindow.setHash(windowhash);
+            }
             return this.#activeWindow;
         }
+
+        // Whow loading animation on cursor
+        document.body.style.cursor = "wait";
+
         let prevActiveWindow = this.#activeWindow;
 
         if (!this.#windows[id].window) {
             let window = new WebguiWindow(id, this.#windows[id].humanReadableId, this.#windows[id].source, this.#windows[id].taskbarIcon);
+            window.getFrame().addEventListener("load", () => {
+                document.body.style.cursor = "";
+            });
             this.#windows[id].window = window;
         }
         let windownew = this.#windows[id].window;
+        if (windowhash) {
+            windownew.setHash(windowhash);
+        }
         this.#activeWindow = windownew;
         this.#windowContainer.innerHTML = "";
         this.#windowContainer.appendChild(windownew.getFrame());
@@ -163,6 +193,7 @@ class WebGui {
      */
     openWindowHRID(humanReadableId) {
         // Open window by human readable id
+        humanReadableId = humanReadableId.split("/")[0];
         let id = Object.keys(this.#windows).find((id) => this.#windows[id].humanReadableId === humanReadableId);
         if (id !== undefined) {
             return this.openWindow(id);
@@ -206,6 +237,7 @@ globalThis.initWebGui = async () => {
 
     /* ADD WINDOWS HERE */
 
+    webgui.addWindow("misc/startpage.html", "", iconManager.createIcon("house"));
     webgui.addWindow("webconsole/index.html", "webconsole", iconManager.createIcon("terminal"));
     webgui.addWindow("https://edu.kendlbat.dev/", "eduweb", iconManager.createIcon("book"));
     webgui.addWindow("https://edu.kendlbat.dev/clockjs/", "clockjs", iconManager.createIcon("clock"));
@@ -234,6 +266,9 @@ globalThis.initWebGui = async () => {
         if (window.location.hash) {
             let hash = new String(window.location.hash).substring(1);
             let newwindow = webgui.openWindowHRID(hash);
+            if (newwindow == null) {
+                webgui.openWindow(0);
+            }
         }
     });
 

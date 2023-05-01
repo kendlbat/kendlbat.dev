@@ -154,56 +154,22 @@ class WebConsole {
             this.saveHistoryToLocalStorage("kendlportfolio");
             stdout("Cleared " + count + " history entries!");
         },
-        "nav": async (args, stdout, stdin) => {
-            while (true) {
-                // Interactive menu for navigating through articles (show in cli with stdout)
-                // Get dir.json from ./pages
-                try {
-                    let resp = await fetch("./pages/pageidx.json");
-                    let json = await resp.json();
-                    let pages = Object.keys(json);
-                    stdout("<br>", true);
-                    let count = 0;
-
-                    for (let page of pages) {
-                        stdout(`  [${count++}] ${page}`, true);
-                    }
-                    // quit option
-                    stdout(`  [q] Cancel`, true);
-                    stdout("<br>", true);
-
-                    let input = await stdin("Enter selection: ");
-                    if (input === null)
-                        continue;
-                    let num = parseInt(input);
-                    if (input.toLowerCase() === "q")
-                        break;
-                    if (isNaN(num) || num < 0 || num >= pages.length) {
-                        stdout("Invalid selection");
-                        continue;
-                    }
-                    // Show html page
-                    // console.log(json);
-                    // console.log(pages);
-                    let pageres = await fetch("./pages/" + json[pages[num]]);
-                    let pagetext = await pageres.text();
-                    pagetext = pagetext.replace(/(\r)?\n/g, "");
-                    this.#clear();
-                    stdout("<br>" + pagetext + "<br>", true);
-                } catch (e) {
-                    stdout("Error: " + e);
-                }
-            }
-        },
         "iframe": async (args, stdout) => {
             // Load argument as iframe
             if (args.length < 2) {
                 stdout("Usage: iframe <url>");
                 return;
             }
+
+            /**
+             * @type {string}
+             */
             let url = args[1];
             // Check if youtube
-            if (url.startsWith("https://www.youtube.com/watch?v=")) {
+            if (url.match("^(https?://)?(www.)?youtu.be/")) {
+                url = url.replace("youtu.be/", "youtube.com/watch?v=");
+            }
+            if (url.match("^(https?://)?(www.)?youtube.com/watch")) {
                 let id = url.split("v=")[1];
                 stdout(`<br><iframe width="560" height="315" src="https://youtube.com/embed/${id}?autoplay=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe><br>`, true);
                 return;
@@ -571,7 +537,7 @@ class WebConsole {
         });
         this.#output = document.createElement("div");
         this.#output.classList.add("webconsole-output");
-        this.#output.innerHTML = "WebConsole v" + WebConsole.VERSION + "\n(c) Tobias Kendlbacher 2023 - MIT License\nType 'help' for a list of commands.\nType 'nav' for navigation.\n\n";
+        this.#output.innerHTML = "WebConsole v" + WebConsole.VERSION + "\n(c) Tobias Kendlbacher 2023 - MIT License\nType 'help' for a list of commands.\n\n";
         this.#container.appendChild(this.#output);
         this.#container.appendChild(this.#inputcontainer);
         this.#newInputLine();
@@ -762,6 +728,16 @@ class WebConsole {
             this.#notfound(args, this.stdout, this.stdin);
     }
 
+    async sendCommand(command) {
+        if (this.#stdindisable)
+            return;
+        this.#stdinbuffer = command;
+        this.#input.value = command;
+        this.#input.dispatchEvent(new KeyboardEvent("keydown", {
+            key: "Enter"
+        }));
+    }
+
     /**
      * 
      * @param {string} name 
@@ -833,6 +809,20 @@ function initMainWebconsole() {
 
     window.addEventListener('beforeunload', (e) => {
         mainconsole.saveHistoryToLocalStorage("kendlportfolio");
+    });
+
+    let url = new URL(window.location.href);
+    let command = url.hash.substring(1);
+    if (command) {
+        mainconsole.sendCommand(command);
+    }
+
+    window.addEventListener("hashchange", (e) => {
+        let url = new URL(window.location.href);
+        let command = url.hash.substring(1);
+        if (command) {
+            mainconsole.sendCommand(command);
+        }
     });
 }
 
