@@ -111,9 +111,10 @@ class WebConsole {
         "echo": (args, stdout) => { stdout(args.slice(1).join(" ")) },
         "help": (args, stdout) => {
             stdout("Available commands:");
-            for (let command in this.#commands)
-                if (command.startsWith("_")) continue;
+            for (let command in this.#commands) {
+                if (new String(command).startsWith("_")) continue;
                 stdout("  " + command);
+            }
         },
         "cat": async (args, stdout) => {
             if (args.length < 2) {
