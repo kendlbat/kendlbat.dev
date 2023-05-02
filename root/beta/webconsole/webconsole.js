@@ -366,6 +366,13 @@ class WebConsole {
             }
         },
         "_amogus": async (args, stdout) => {
+            let audio = document.createElement("audio");
+            audio.src = "https://static.kendlbat.dev/audio/amogus.mp3";
+            document.body.appendChild(audio);
+            audio.onended = () => {
+                document.body.removeChild(audio);
+            };
+            audio.play();
             stdout("            ⠀⣠⣤⣤⣤⣤⣤⣤⣤⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀ ");
             stdout("⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⡿⠛⠉⠙⠛⠛⠛⠛⠻⢿⣿⣷⣤⡀⠀⠀⠀⠀⠀ ");
             stdout("⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⠋⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⠈⢻⣿⣿⡄⠀⠀⠀⠀ ");
