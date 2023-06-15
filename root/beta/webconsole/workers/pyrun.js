@@ -131,7 +131,7 @@ async function main() {
         let hasResolved = false;
 
         // Replace all occurences of "input" without "await" before into "await input"
-        file = file.replace(/(?<!await )input/g, "await input");
+        file = file.replace(/(?<!await )input\(/g, "await input(");
 
         let hangDetectionInterval = setInterval(() => {
             if (pyError) {
@@ -148,7 +148,7 @@ async function main() {
                     PyrunWorkerAPI.exit(1);
                 }
             }
-        }, 200);
+        }, 1000);
 
         let exec = pyodide.runPythonAsync(file);
 

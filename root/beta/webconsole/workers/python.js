@@ -170,7 +170,7 @@ async function main() {
             let hasResolved = false;
 
             // Replace all occurences of "input" without "await" before into "await input"
-            code = code.replace(/(?<!await )input/g, "await input");
+            code = code.replace(/(?<!await )input\(/g, "await input(");
 
             let hangDetectionInterval = setInterval(() => {
                 if (!hasResolved) {
