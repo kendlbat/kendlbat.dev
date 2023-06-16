@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="style.css">
     <title>kendlbat.dev</title>
 </head>
+
 <body>
     <div id="fullpage">
         <div class="section" id="section0">
@@ -20,7 +22,8 @@
         <div class="section" id="section1">
             <h1>About me</h1>
             <p>
-                I'm a student studying Computer Science at <a href="https://htl-villach.at" target="_blank"><abbr title="Higher Technical College and Research Institute Villach">HTL Villach</abbr></a>.<br>
+                I'm a student studying Computer Science at <a href="https://htl-villach.at" target="_blank"><abbr
+                        title="Higher Technical College and Research Institute Villach">HTL Villach</abbr></a>.<br>
                 Currently I am just creating random projects as a hobby.
             </p>
             <!--Social media buttons-->
@@ -43,7 +46,24 @@
             navigationTooltips: ["Intro", "About", "Menu"],
             anchors: ["intro", "about", "menu"]
         });
-    </script>
 
+        document.addEventListener("DOMContentLoaded", () => {
+            var betaNotification = document.createElement("div");
+            betaNotification.innerHTML = "<h2>Beta notice</h2><p>This page is in the process of transitioning to a new version. You can preview the new version <a href='beta'>here!</a><br>Click anywhere on this popup to close.</p>";
+            betaNotification.style.zIndex = 99;
+            betaNotification.style.left = 0;
+            betaNotification.style.top = 0;
+            betaNotification.style.width = "100%";
+            betaNotification.style.padding = "5%";
+            betaNotification.style.backgroundColor = "orange";
+            betaNotification.style.position = "fixed";
+            betaNotification.id = "betaNotificationPopup";
+            betaNotification.addEventListener("click", (e) => {
+                betaNotification.remove();
+            });
+            document.body.appendChild(betaNotification);
+        });
+    </script>
 </body>
+
 </html>
