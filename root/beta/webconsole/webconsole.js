@@ -175,10 +175,10 @@ class WebConsole {
             }
             if (url.match("^(https?://)?(www.)?youtube.com/watch")) {
                 let id = url.split("v=")[1];
-                stdout(`<br><div style='display:inline-flex; margin:0; padding:0; resize:both; overflow:hidden;'><iframe style=style='flex-grow:1; margin:0; padding:0; border:0;' width="560" height="315" src="https://youtube.com/embed/${id}?autoplay=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><br>`, true);
+                stdout(`<br><div style='display:inline-flex; margin:0; padding:0; resize:both; overflow:hidden; max-width: 100%;'><iframe style=style='flex-grow:1; margin:0; padding:0; border:0;' width="560" height="${window.innerHeight * 0.9}" src="https://youtube.com/embed/${id}?autoplay=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div><br>`, true);
                 return;
             }
-            stdout("<br><div style='display:inline-flex; margin:0; padding:0; resize:both; overflow:hidden;'><iframe width='560' height='315' src='" + url + "' style='flex-grow:1; margin:0; padding:0; border:0;'></iframe></div><br>", true);
+            stdout("<br><div style='display:inline-flex; margin:0; padding:0; resize:both; overflow:hidden; max-width: 100%;'><iframe width='1920' height='" + window.innerHeight * 0.9 + "' src='" + url + "' style='flex-grow:1; margin:0; padding:0; border:0;'></iframe></div><br>", true);
         },
         "python": async (args, stdout, stdin) => {
             // Load pyodide from CDN
