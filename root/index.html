@@ -31,14 +31,14 @@
         </p>
     </noscript>
     <script>
-        globalThis.WEBGUI_VERSIONID = "0.1.16";
+        window.WEBGUI_VERSIONID = "0.1.16";
 
         async function main() {
             let loadStylesheet = () => {
                 return new Promise((resolve, reject) => {
                     const stylesheet = document.createElement("link");
                     stylesheet.rel = "stylesheet";
-                    stylesheet.href = "webgui.css?version=" + globalThis.WEBGUI_VERSIONID;
+                    stylesheet.href = "webgui.css?version=" + window.WEBGUI_VERSIONID;
                     document.head.appendChild(stylesheet);
 
                     stylesheet.addEventListener("load", () => {
@@ -50,12 +50,12 @@
             let loadIconManager = () => {
                 return new Promise((resolve, reject) => {
                     const iconManagerScript = document.createElement("script");
-                    iconManagerScript.src = "iconManager.js?version=" + globalThis.WEBGUI_VERSIONID;
+                    iconManagerScript.src = "iconManager.js?version=" + window.WEBGUI_VERSIONID;
                     iconManagerScript.type = "module";
                     document.head.appendChild(iconManagerScript);
 
                     iconManagerScript.addEventListener("load", async () => {
-                        await globalThis.initIconManager();
+                        await window.initIconManager();
                         resolve();
                     });
                 });
@@ -64,7 +64,7 @@
             let loadWebGui = () => {
                 return new Promise((resolve, reject) => {
                     const script = document.createElement("script");
-                    script.src = "webgui.js?version=" + globalThis.WEBGUI_VERSIONID;
+                    script.src = "webgui.js?version=" + window.WEBGUI_VERSIONID;
                     script.type = "module";
                     document.head.appendChild(script);
 
@@ -72,7 +72,7 @@
                         document.getElementById("webgui-container").style.opacity = 1;
                     });
                     script.addEventListener("load", async () => {
-                        await globalThis.initWebGui();
+                        await window.initWebGui();
                         resolve();
                     });
                 });

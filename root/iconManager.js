@@ -23,14 +23,14 @@ async function iconManagerCacheURL(url) {
     return dataUrl;
 }
 
-globalThis.initIconManager = async () => {
+window.initIconManager = async () => {
     let url = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.4/font/";
     let stylefile = "bootstrap-icons.css";
 
     let version = localStorage.getItem("lastVersion");
-    if (version !== globalThis.WEBCONSOLE_VERSIONID) {
+    if (version !== window.WEBCONSOLE_VERSIONID) {
         localStorage.clear();
-        localStorage.setItem("lastVersion", globalThis.WEBCONSOLE_VERSIONID);
+        localStorage.setItem("lastVersion", window.WEBCONSOLE_VERSIONID);
     }
 
     let icons = localStorage.getItem("icons");
@@ -63,7 +63,7 @@ globalThis.initIconManager = async () => {
     document.head.appendChild(style);
 };
 
-globalThis.iconManager = {
+window.iconManager = {
     createIcon: (iconName) => {
         let icon = document.createElement("i");
         icon.classList.add("bi");
