@@ -28,9 +28,9 @@ window.initIconManager = async () => {
     let stylefile = "bootstrap-icons.css";
 
     let version = localStorage.getItem("lastVersion");
-    if (version !== window.WEBCONSOLE_VERSIONID) {
+    if (version !== window.WEBGUI_VERSIONID) {
         localStorage.clear();
-        localStorage.setItem("lastVersion", window.WEBCONSOLE_VERSIONID);
+        localStorage.setItem("lastVersion", window.WEBGUI_VERSIONID);
     }
 
     let icons = localStorage.getItem("icons");
