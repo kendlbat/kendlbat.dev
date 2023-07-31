@@ -79,3 +79,9 @@ i.bi::before {
     vertical-align: top;
     width: var(--webgui-taskbar-elem-width);
 }
+
+@media print {
+    .webgui-taskbar {
+        display: none;
+    }
+}
