@@ -288,6 +288,7 @@ globalThis.initWebGui = async () => {
     webgui.addWindow("https://edu.kendlbat.dev/clockjs/", "clockjs", iconManager.createIcon("clock"));
     webgui.addWindow("https://browsergames.pages.dev/", "browsergames", iconManager.createIcon("controller"));
     webgui.addWindow("https://ill-tan-crow-garb.cyclic.app/index.html", "oebbtimetable", iconManager.createIcon("train-front"));
+    webgui.addWindow("https://battleship.kendlbat.dev", "battleship", iconManager.createIcon("people"));
     webgui.addWindow("misc/about.html", "about", iconManager.createIcon("info-circle"));
 
     /* ----- */
