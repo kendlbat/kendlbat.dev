@@ -1,3 +1,8 @@
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("../assets/JetBrainsMono-Regular.woff2");
+}
+
 :root * {
     box-sizing: border-box;
 }
@@ -14,7 +19,7 @@
 .webconsole-container {
     background-color: #000000;
     color: #ffffff;
-    font-family: monospace;
+    font-family: "JetBrains Mono", monospace;
     white-space: pre;
     overflow: auto;
 }
@@ -32,7 +37,7 @@
     border: none;
     background-color: transparent;
     color: #ffffff;
-    font-family: monospace;
+    font-family: "JetBrains Mono", monospace;
     margin: 0;
     padding: 0;
     font-size: 1em;
