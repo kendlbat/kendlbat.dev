@@ -212,22 +212,34 @@ class WebGui {
             windownew.setHash(undefined);
         }
         this.#activeWindow = windownew;
-        this.#windowContainer.innerHTML = "";
-        this.#windowContainer.appendChild(windownew.getFrame());
 
-        if (prevActiveWindow) {
-            this.#taskbar.querySelector(".webgui-taskbar-elem-" + prevActiveWindow.id).classList.remove("active");
+        let finalise = (resolve) => {
+            this.#windowContainer.innerHTML = "";
+            this.#windowContainer.appendChild(windownew.getFrame());
+
+            if (prevActiveWindow) {
+                this.#taskbar.querySelector(".webgui-taskbar-elem-" + prevActiveWindow.id).classList.remove("active");
+            }
+            this.#windows[id].taskbarIcon.classList.add("active");
+
+            // Push window id to anchor
+
+            this.#activeWindow.getFrame().focus();
+            if ((!prevActiveWindow) && windowhash) {
+                window.location.hash = "#" + this.#activeWindow.humanReadableId + "/" + windowhash;
+            } else {
+                window.location.hash = "#" + this.#activeWindow.humanReadableId;
+            }
+
+            if (resolve) resolve();
         }
-        this.#windows[id].taskbarIcon.classList.add("active");
 
-        // Push window id to anchor
-
-        this.#activeWindow.getFrame().focus();
-        if ((!prevActiveWindow) && windowhash) {
-            window.location.hash = "#" + this.#activeWindow.humanReadableId + "/" + windowhash;
+        if (!document.startViewTransition) {
+            finalise();
         } else {
-            window.location.hash = "#" + this.#activeWindow.humanReadableId;
+            document.startViewTransition(async () => (await new Promise((res, rej) => { finalise(res); })));
         }
+
         return windownew;
     }
 
