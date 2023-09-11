@@ -37,6 +37,7 @@ class WebguiWindow {
         this.#frame.addEventListener("load", () => {
             if (this.#frame.contentDocument) {
                 let base = this.#frame.contentDocument.createElement("base");
+                base.href = new URL(this.#frame.src).href;
                 base.target = "_blank";
                 this.#frame.contentDocument.head.appendChild(base);
 
