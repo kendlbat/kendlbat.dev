@@ -334,6 +334,8 @@ globalThis.initWebGui = async () => {
             if (newwindow == null) {
                 webgui.openWindow(0);
             }
+        } else {
+            webgui.openWindow(0);
         }
     });
 
