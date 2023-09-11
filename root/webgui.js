@@ -44,6 +44,10 @@ class WebguiWindow {
                 let links = this.#frame.contentDocument.querySelectorAll("a");
                 for (let i = 0; i < links.length; i++) {
                     let link = links[i];
+                    if (link.getAttribute("webguisametab")) {
+                        link.target = "_self";
+                        continue;
+                    }
                     let url = new URL(link.href);
                     if (!url.pathname) {
                         url.pathname = parentWindow.location.pathname;
@@ -295,6 +299,7 @@ globalThis.initWebGui = async () => {
     /* ADD WINDOWS HERE */
 
     webgui.addWindow("misc/startpage.html", "", iconManager.createIcon("house"));
+    webgui.addWindow("misc/links.html", "links", iconManager.createIcon("link-45deg"));
     webgui.addWindow("webconsole/index.html", "webconsole", iconManager.createIcon("terminal"));
     webgui.addWindow("https://edu.kendlbat.dev/", "eduweb", iconManager.createIcon("book"));
     webgui.addWindow("https://edu.kendlbat.dev/clockjs/", "clockjs", iconManager.createIcon("clock"));
