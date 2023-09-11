@@ -57,7 +57,7 @@ class WebguiWindow {
                         url.origin = parentWindow.location.origin;
                     }
                     if (url.pathname === this.#frame.contentWindow.location.pathname && url.origin === this.#frame.contentWindow.location.origin) {
-                        if (link.href.includes("#")) {
+                        if (link.href.startsWith("#")) {
                             link.href = undefined;
                             let hash = url.hash.substring(1);
                             link.onclick = (e) => {
