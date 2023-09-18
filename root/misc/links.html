@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Links</title>
+    <script src="../iconManager.js"></script>
+    <script>(async () => window.initIconManager())();</script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        :root {
+            --size: 8em;
+        }
+
+        body {
+            background-color: #333;
+            margin: 0px;
+        }
+
+        ul {
+            list-style-type: none;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 1em;
+            padding: 0px;
+            margin: calc(var(--size) / 3);
+            min-width: var(--size);
+            width: max(var(--size), calc(100% - (2 * (var(--size) / 3))));
+        }
+
+        ul>li {
+            width: var(--size);
+            aspect-ratio: 1;
+            display: inline-block;
+        }
+
+        ul>li>a {
+            display: inline-block;
+            width: 100%;
+            height: 100%;
+            vertical-align: middle;
+            text-align: center;
+            font-size: calc(var(--size) - 2em);
+            --acc: white;
+            border-radius: 5px;
+            border: 5px solid var(--acc);
+        }
+
+        i,
+        i:before {
+            vertical-align: top !important;
+            width: 100%;
+            height: 100%;
+            display: inline-block;
+        }
+
+        i {
+            padding: 0.125em 0.1em 0.1em 0.1em;
+        }
+
+        ul>li>a,
+        ul>li>a:visited,
+        ul>li>a:active {
+            color: var(--acc);
+        }
+    </style>
+</head>
+
+<body>
+    <ul>
+        <li>
+            <a href="mailto:contact.webportfolio@kendlbat.dev" title="E-Mail">
+                <i class="bi bi-envelope-fill"></i>
+            </a>
+        </li>
+        <li>
+            <a href="https://kendlbat.dev/linkedin" title="LinkedIn" style="--acc: #0072b1;">
+                <i class="bi bi-linkedin"></i>
+            </a>
+        </li>
+        <li>
+            <a href="https://github.com/kendlbat" title="GitHub" style="--acc: black;">
+                <i class="bi bi-github"></i>
+            </a>
+        </li>
+        <li>
+            <a href="https://www.buymeacoffee.com/kendlbat" title="Buy me a coffee" style="--acc: black;">
+                <img src="../assets/images/buymeacoffee.svg" alt="Buymeacoffee logo">
+            </a>
+        </li>
+        <li>
+            <a href="https://instagram.com/kendlbat" title="Instagram" id="insta-logo" style="--acc: #af3692;">
+                <i style="color: rgba(0, 0, 0, 0); background: linear-gradient(45deg, #405de6, #5851db, #833ab4, #c13584, #e1306c, #fd1d1d); background-clip: text;"
+                    class="bi bi-instagram"></i>
+            </a>
+        </li>
+        <li>
+            <a href="./pubkey.txt" title="GPG Public Key" style="--acc: white;">
+                <i class="bi bi-key-fill"></i>
+            </a>
+        </li>
+        <!--
+        <li>
+            <a href="https://example.com/" title="example" style="--acc: black;">
+                <i class="bi bi-example"></i>
+            </a>
+        </li>
+        -->
+    </ul>
+</body>
+
+</html>

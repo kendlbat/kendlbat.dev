@@ -28,7 +28,7 @@ window.initIconManager = async () => {
     let stylefile = "bootstrap-icons.css";
 
     let version = localStorage.getItem("lastVersion");
-    if (version !== window.WEBGUI_VERSIONID) {
+    if (window.WEBGUI_VERSIONID && version !== window.WEBGUI_VERSIONID) {
         localStorage.clear();
         localStorage.setItem("lastVersion", window.WEBGUI_VERSIONID);
     }
@@ -54,7 +54,7 @@ window.initIconManager = async () => {
     }
 
     for (let match of matches) {
-        icons = icons.replace(match.match, "url(" + await iconManagerCacheURL(url + match.url) + ")");
+        icons = icons.replace(match.match, "url(\"" + await iconManagerCacheURL(url + match.url) + "\")");
     }
 
     let style = document.createElement("style");

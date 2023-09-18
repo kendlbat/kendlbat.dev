@@ -37,6 +37,7 @@ class WebguiWindow {
         this.#frame.addEventListener("load", () => {
             if (this.#frame.contentDocument) {
                 let base = this.#frame.contentDocument.createElement("base");
+                base.href = new URL(this.#frame.src).href;
                 base.target = "_blank";
                 this.#frame.contentDocument.head.appendChild(base);
 
@@ -44,6 +45,10 @@ class WebguiWindow {
                 let links = this.#frame.contentDocument.querySelectorAll("a");
                 for (let i = 0; i < links.length; i++) {
                     let link = links[i];
+                    if (link.getAttribute("webguisametab")) {
+                        link.target = "_self";
+                        continue;
+                    }
                     let url = new URL(link.href);
                     if (!url.pathname) {
                         url.pathname = parentWindow.location.pathname;
@@ -52,7 +57,7 @@ class WebguiWindow {
                         url.origin = parentWindow.location.origin;
                     }
                     if (url.pathname === this.#frame.contentWindow.location.pathname && url.origin === this.#frame.contentWindow.location.origin) {
-                        if (link.href.includes("#")) {
+                        if (link.href.startsWith("#")) {
                             link.href = undefined;
                             let hash = url.hash.substring(1);
                             link.onclick = (e) => {
@@ -295,6 +300,7 @@ globalThis.initWebGui = async () => {
     /* ADD WINDOWS HERE */
 
     webgui.addWindow("misc/startpage.html", "", iconManager.createIcon("house"));
+    webgui.addWindow("misc/links.html", "links", iconManager.createIcon("link-45deg"));
     webgui.addWindow("webconsole/index.html", "webconsole", iconManager.createIcon("terminal"));
     webgui.addWindow("https://edu.kendlbat.dev/", "eduweb", iconManager.createIcon("book"));
     webgui.addWindow("https://edu.kendlbat.dev/clockjs/", "clockjs", iconManager.createIcon("clock"));
@@ -329,6 +335,8 @@ globalThis.initWebGui = async () => {
             if (newwindow == null) {
                 webgui.openWindow(0);
             }
+        } else {
+            webgui.openWindow(0);
         }
     });
 
