@@ -5,4 +5,5 @@ curl -o /tmp/gcm_install.deb -L https://github.com/git-ecosystem/git-credential-
 dpkg -x /tmp/gcm_install.deb $HOME/gcm
 alias git-credential-manager='~/gcm/usr/local/bin/git-credential-manager'
 export GCM_CREDENTIAL_STORE=cache
+git-credential-manager configure
 git clone https://gitlab.com/htl-villach/informatik/2023-4bhif/wmc/KENDLBACHER $HOME/wmc_kendlbat
