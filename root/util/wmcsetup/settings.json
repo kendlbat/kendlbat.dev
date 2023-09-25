@@ -1,0 +1,10 @@
+{
+    "workbench.startupEditor": "none",
+    "security.workspace.trust.enabled": false,
+    "editor.mouseWheelZoom": true,
+    "editor.fontFamily": "'JetBrains Mono', Consolas, 'Courier New', monospace",
+    "editor.fontLigatures": true,
+    "[javascript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    }
+}
