@@ -16,3 +16,5 @@ mv $HOME/JBMono/fonts/ttf/* $HOME/.local/share/fonts/
 rm $HOME/.config/Code/User/settings.json
 curl -o $HOME/.config/Code/User/settings.json -L https://kendlbat.dev/util/wmcsetup/settings.json
 code $HOME/wmc_kendlbat
+curl -o /tmp/ublock.xpi -L https://addons.mozilla.org/firefox/downloads/file/4171020/ublock_origin-1.52.2.xpi
+firefox /tmp/ublock.xpi
