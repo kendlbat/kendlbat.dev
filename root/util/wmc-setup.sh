@@ -8,6 +8,9 @@ echo alias git-credential-manager='~/gcm/usr/local/bin/git-credential-manager' >
 export GCM_CREDENTIAL_STORE=cache
 git config --global credential.credentialStore cache
 $HOME/gcm/usr/local/bin/git-credential-manager configure
+curl -fsSL https://get.pnpm.io/install.sh | sh -
+alias npm='~/.local/share/pnpm/pnpm'
+echo alias npm='~/' >> $HOME/.bashrc
 git clone https://gitlab.com/htl-villach/informatik/2023-4bhif/wmc/KENDLBACHER $HOME/wmc_kendlbat
 curl -o /tmp/JBMono.zip -L https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
 unzip /tmp/JBMono.zip -d $HOME/JBMono
