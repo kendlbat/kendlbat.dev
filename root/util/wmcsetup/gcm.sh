@@ -7,4 +7,5 @@ export GCM_CREDENTIAL_STORE=cache
 git config --global credential.credentialStore cache
 $HOME/gcm/usr/local/bin/git-credential-manager configure
 git clone https://gitlab.com/htl-villach/informatik/2023-4bhif/wmc/KENDLBACHER $HOME/wmc_kendlbat
+while [ ! -f $HOME/.local/share/fonts/JetBrainsMono-Regular.ttf ]; do sleep 1; done
 code $HOME/wmc_kendlbat
