@@ -1,6 +1,6 @@
 <script lang="ts">
     import { Button, Tooltip } from "flowbite-svelte";
-    import MastodonIcon from "../../../assets/icons/mastodon.svg";
+    import MastodonIcon from "@assets/icons/mastodon.svg";
 </script>
 
 <!-- Mastodon -->

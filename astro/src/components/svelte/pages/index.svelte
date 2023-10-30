@@ -3,11 +3,11 @@
     import { ArrowRightOutline, LinkedinSolid } from "flowbite-svelte-icons";
     import Social from "./social.svelte";
 
-    import FbgImage from "../../../assets/fbg.png";
-    import AcscImage from "../../../assets/acsc.png";
-    import HtlVillachImage from "../../../assets/htl-villach.png";
-    import LicHTerLohImage from "../../../assets/lichterloh.png";
-    import Fgc2023Image from "../../../assets/fgc2023.png";
+    import FbgImage from "@assets/fbg.png";
+    import AcscImage from "@assets/acsc.png";
+    import HtlVillachImage from "@assets/htl-villach.png";
+    import LicHTerLohImage from "@assets/lichterloh.png";
+    import Fgc2023Image from "@assets/fgc2023.png";
 </script>
 
 <div>

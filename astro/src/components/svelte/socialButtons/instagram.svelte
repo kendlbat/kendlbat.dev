@@ -2,7 +2,7 @@
     import { Button, Tooltip } from "flowbite-svelte";
     import { GithubSolid } from "flowbite-svelte-icons";
 
-    import InstagramIcon from "../../../assets/icons/instagram.png";
+    import InstagramIcon from "@assets/icons/instagram.png";
 </script>
 
 <!-- Instagram -->
