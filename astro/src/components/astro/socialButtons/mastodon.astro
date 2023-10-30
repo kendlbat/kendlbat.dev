@@ -1,0 +1,15 @@
+---
+import { Button } from "flowbite-svelte";
+import MastodonIcon from "@assets/icons/mastodon.svg";
+import { Image } from "astro:assets";
+---
+
+<!-- Mastodon -->
+<div class="aspect-square h-full">
+    <Button
+        class="h-full p-0"
+        href="https://mastodon.social/@kendlbat"
+        color="none">
+        <Image src={MastodonIcon} class="h-full w-full" alt="Mastodon" />
+    </Button>
+</div>

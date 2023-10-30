@@ -1,0 +1,97 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+import { Heading, P } from "flowbite-svelte";
+import Social from "../components/astro/Social.astro";
+
+import FbgImage from "@assets/fbg.png";
+import AcscImage from "@assets/acsc.png";
+import HtlVillachImage from "@assets/htl-villach.png";
+import LicHTerLohImage from "@assets/lichterloh.png";
+import Fgc2023Image from "@assets/fgc2023.png";
+import ImageCard from "@/components/astro/ImageCard.astro";
+---
+
+<Layout
+    title="Home"
+    description="Tobias Kendlbacher - 17 y/o Software Developer - Student @ HTL Villach">
+    <div>
+        <Heading tag="h2">Hi there!</Heading>
+        <P class="mb-6 mt-6 text-lg lg:text-xl">
+            I'm Tobias Kendlbacher and I'm a 17 year old student from Austria.
+        </P>
+        <Social outerClass="h-12" />
+    </div>
+    <div>
+        <Heading tag="h3" class="mb-6 mt-16 text-lg lg:text-xl">
+            Here are some of the things I am passionate about:
+        </Heading>
+        <div
+            class="inline-block columns-1 sm:columns-2 md:columns-3 lg:columns-4">
+            <ImageCard
+                img={FbgImage}
+                alt="Fly-By Guys"
+                href="https://flybyguys.com/">
+                <h5
+                    class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    Software Engineer at Fly-By Guys
+                </h5>
+                <p
+                    class="font-normal leading-tight text-gray-700 dark:text-gray-400">
+                    Sept 2023 - Present
+                </p>
+            </ImageCard>
+
+            <ImageCard
+                href="https://htl-villach.at/"
+                img={HtlVillachImage}
+                alt="HTL Villach">
+                <h5
+                    class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    Computer Science Student at HTL Villach
+                </h5>
+                <p
+                    class="font-normal leading-tight text-gray-700 dark:text-gray-400">
+                    2020 - Present
+                </p>
+            </ImageCard>
+
+            <ImageCard
+                href="https://verbotengut.at/"
+                img={AcscImage}
+                alt="ACSC">
+                <h5
+                    class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    2<sup>nd</sup> place at the Austrian Cyber Security
+                    Challenge 2023
+                </h5>
+            </ImageCard>
+
+            <ImageCard
+                href="https://theater-lichterloh.com/"
+                img={LicHTerLohImage}
+                alt="Theater LicHTerLoh"
+                divClass="mb-2 break-inside-avoid p-[0.5rem]">
+                <div class="m-[-0.5rem]">
+                    <h5
+                        class="mb-2 break-inside-avoid text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                        Actor at Theater LicHTerLoh
+                    </h5>
+                </div>
+            </ImageCard>
+
+            <ImageCard
+                href="https://first.global/"
+                img={Fgc2023Image}
+                alt="FIRST Global Team Austria"
+                divClass="mb-2 max-w-[14rem] break-inside-avoid p-[0.5rem]">
+                <div class="m-[-0.5rem]">
+                    <h5
+                        class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                        FIRST&reg; Global Challenge 2023
+                    </h5>
+                </div>
+            </ImageCard>
+        </div>
+    </div>
+</Layout>
