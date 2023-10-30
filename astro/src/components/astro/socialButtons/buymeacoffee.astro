@@ -1,0 +1,20 @@
+---
+import { Button } from "flowbite-svelte";
+import BmcIcon from "@assets/icons/bmc-logo.svg";
+
+import { Image } from "astro:assets";
+---
+
+<!-- Buy me a coffee -->
+<div class="aspect-square h-full">
+    <Button
+        class="aspect-square h-full border border-gray-600 bg-[#FFF] p-0 dark:border-none"
+        href="https://www.buymeacoffee.com/kendlbat"
+        color="none">
+        <Image
+            src={BmcIcon}
+            class="aspect-square h-2/3 w-2/3"
+            alt="Buy me a coffee"
+        />
+    </Button>
+</div>

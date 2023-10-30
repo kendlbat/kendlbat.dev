@@ -1,0 +1,27 @@
+---
+import SocialGithub from "./socialButtons/github.astro";
+import SocialLinkedin from "./socialButtons/linkedin.astro";
+import SocialBuymeacoffee from "./socialButtons/buymeacoffee.astro";
+import SocialInstagram from "./socialButtons/instagram.astro";
+import SocialMastodon from "./socialButtons/mastodon.astro";
+
+interface Props {
+    outerClass?: string;
+}
+
+const { outerClass = "h-16" } = Astro.props;
+---
+
+<div class={outerClass}>
+    <div class="flex h-full flex-row flex-wrap gap-2">
+        <SocialGithub />
+
+        <SocialLinkedin />
+
+        <SocialBuymeacoffee />
+
+        <SocialInstagram />
+
+        <SocialMastodon />
+    </div>
+</div>

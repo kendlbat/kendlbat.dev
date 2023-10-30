@@ -1,0 +1,21 @@
+---
+import { Image } from "astro:assets";
+interface Props {
+    href?: string;
+    img: ImageMetadata;
+    alt: string;
+    divClass?: string;
+}
+
+const { href = "javascript:void(0);", img, alt, divClass = "" } = Astro.props;
+---
+
+<a
+    {href}
+    class={(divClass == "" ? "" : divClass + " ") +
+        "mb-2 flex max-w-sm break-inside-avoid flex-col divide-gray-200 rounded-lg border border-gray-200 bg-white text-gray-500 shadow-md hover:bg-gray-100 dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"}>
+    <Image src={img} {alt} class="rounded-t-lg" />
+    <div class="p-4 sm:p-6">
+        <slot />
+    </div>
+</a>
