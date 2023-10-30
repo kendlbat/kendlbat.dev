@@ -4,10 +4,11 @@
 </script>
 
 <!-- LinkedIn -->
-<Button
-    class="h-16 w-16 bg-[#0077b5]"
-    href="https://www.linkedin.com/in/kendlbat"
-    color="none">
-    <LinkedinSolid class="h-10 w-10 text-white" />
-</Button>
-<Tooltip>LinkedIn</Tooltip>
+<div class="aspect-square h-full">
+    <Button
+        class="aspect-square h-full w-full bg-[#0077b5] p-0"
+        href="https://www.linkedin.com/in/kendlbat"
+        color="none">
+        <LinkedinSolid class="aspect-square h-2/3 w-2/3 text-white" />
+    </Button>
+</div>

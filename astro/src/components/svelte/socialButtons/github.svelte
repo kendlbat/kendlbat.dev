@@ -1,13 +1,14 @@
 <script lang="ts">
-    import { Button, Tooltip } from "flowbite-svelte";
+    import { Button } from "flowbite-svelte";
     import { GithubSolid } from "flowbite-svelte-icons";
 </script>
 
 <!-- GitHub -->
-<Button
-    class="h-16 w-16 bg-[#171515]"
-    href="https://github.com/kendlbat"
-    color="none">
-    <GithubSolid class="h-12 w-12 text-white" />
-</Button>
-<Tooltip>GitHub</Tooltip>
+<div class="aspect-square h-full">
+    <Button
+        class="h-full w-full bg-[#171515] p-0"
+        href="https://github.com/kendlbat"
+        color="none">
+        <GithubSolid class="h-4/5 w-4/5 text-white" />
+    </Button>
+</div>

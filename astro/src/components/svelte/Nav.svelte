@@ -15,8 +15,8 @@
 <Navbar class="bg-slate-200">
     <NavBrand href="/">
         <span
-            class="self-center whitespace-nowrap pl-3 text-xl font-semibold dark:text-white"
-            >Tobias Kendlbacher</span>
+            class="self-center whitespace-nowrap pl-3 text-xl font-semibold dark:text-white sm:pl-0">
+            Tobias Kendlbacher</span>
     </NavBrand>
     <div class="flex items-center md:order-2">
         <DarkMode />
@@ -24,6 +24,6 @@
     </div>
     <NavUl {activeUrl}>
         <NavLi href="/">Home</NavLi>
-        <NavLi href="/social/">Social</NavLi>
+        <NavLi href="/blog/">Blog</NavLi>
     </NavUl>
 </Navbar>

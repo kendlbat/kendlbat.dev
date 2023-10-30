@@ -4,7 +4,11 @@
 </script>
 
 <!-- Mastodon -->
-<Button class="p-0" href="https://mastodon.social/@kendlbat" color="none">
-    <img src={MastodonIcon.src} class="h-[4.2rem]" alt="Mastodon" />
-</Button>
-<Tooltip>Mastodon</Tooltip>
+<div class="aspect-square h-full">
+    <Button
+        class="h-full p-0"
+        href="https://mastodon.social/@kendlbat"
+        color="none">
+        <img src={MastodonIcon.src} class="h-full w-full" alt="Mastodon" />
+    </Button>
+</div>
