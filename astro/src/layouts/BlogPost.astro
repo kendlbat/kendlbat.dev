@@ -1,0 +1,80 @@
+---
+import Heading from "flowbite-svelte/Heading.svelte";
+import { ViewTransitions } from "astro:transitions";
+import SvelteNav from "../components/svelte/Nav.svelte";
+import "katex/dist/katex.min.css";
+
+interface Props {
+    frontmatter: {
+        title: string;
+        date: string;
+        language: "English" | "German";
+    };
+}
+
+const { frontmatter } = Astro.props;
+
+console.log(frontmatter);
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="description"
+            content={`Blog post on kendlbat.dev - ${
+                frontmatter.date.split("T")[0]
+            } - ${frontmatter.language}`}
+        />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="author" content="Tobias Kendlbacher" />
+        <meta
+            name="keywords"
+            content="Kendlbacher, Developer, Portfolio, Tobias Kendlbacher, Kendlbacher Austria, Kendlbacher HTL Villach"
+        />
+        <link rel="sitemap" href="/sitemap-index.xml" />
+        <meta name="generator" content={Astro.generator} />
+        <title>{frontmatter.title}</title>
+
+        <style is:global>
+            h1 {
+                @apply text-4xl font-bold;
+            }
+
+            h2 {
+                @apply text-3xl font-bold;
+            }
+
+            h3 {
+                @apply text-2xl font-bold;
+            }
+
+            h4 {
+                @apply text-xl font-bold;
+            }
+
+            h5 {
+                @apply text-lg font-bold;
+            }
+        </style>
+
+        <ViewTransitions />
+    </head>
+    <body class="bg-white dark:bg-gray-800">
+        <SvelteNav client:load activeUrl={Astro.url.pathname} />
+        <main class="m-8">
+            <Heading tag="h1">{frontmatter.title}</Heading>
+            <p class="text-md mt-2 text-gray-500 dark:text-gray-400">
+                Posted on {frontmatter.date.split("T")[0]} in {
+                    frontmatter.language
+                }
+            </p>
+            <div class="mt-2 text-lg dark:text-white">
+                <article class="prose dark:prose-invert">
+                    <slot />
+                </article>
+            </div>
+        </main>
+    </body>
+</html>

@@ -5,7 +5,7 @@ export default {
         "./node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}",
     ],
 
-    plugins: [require("flowbite/plugin")],
+    plugins: [require('@tailwindcss/typography'), require("flowbite/plugin")],
 
     darkMode: "class",
 

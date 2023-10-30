@@ -7,7 +7,6 @@
         Navbar,
         NavLi,
     } from "flowbite-svelte";
-    import { SunSolid, MoonSolid } from "flowbite-svelte-icons";
 
     export let activeUrl: string;
 </script>
