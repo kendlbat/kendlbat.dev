@@ -9,12 +9,11 @@ interface Props {
         title: string;
         date: string;
         language: "English" | "German";
+        image?: string;
     };
 }
 
 const { frontmatter } = Astro.props;
-
-console.log(frontmatter);
 ---
 
 <!doctype html>
@@ -70,7 +69,7 @@ console.log(frontmatter);
                     frontmatter.language
                 }
             </p>
-            <div class="mt-2 text-lg dark:text-white">
+            <div class="mt-4 text-lg dark:text-white">
                 <article class="prose dark:prose-invert">
                     <slot />
                 </article>
