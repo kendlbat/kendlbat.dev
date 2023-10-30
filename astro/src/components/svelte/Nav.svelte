@@ -24,6 +24,6 @@
     </div>
     <NavUl {activeUrl}>
         <NavLi href="/">Home</NavLi>
-        <NavLi href="/social">Social</NavLi>
+        <NavLi href="/social/">Social</NavLi>
     </NavUl>
 </Navbar>

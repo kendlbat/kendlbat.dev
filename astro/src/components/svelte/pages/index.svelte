@@ -1,7 +1,13 @@
 <script lang="ts">
     import { Heading, P, Button, Card } from "flowbite-svelte";
-    import { ArrowRightOutline } from "flowbite-svelte-icons";
+    import { ArrowRightOutline, LinkedinSolid } from "flowbite-svelte-icons";
     import Social from "./social.svelte";
+
+    import FbgImage from "../../../assets/fbg.png";
+    import AcscImage from "../../../assets/acsc.png";
+    import HtlVillachImage from "../../../assets/htl-villach.png";
+    import LicHTerLohImage from "../../../assets/lichterloh.png";
+    import Fgc2023Image from "../../../assets/fgc2023.png";
 </script>
 
 <div>
@@ -22,16 +28,17 @@
         <Card
             class="mb-2 break-inside-avoid"
             href="https://flybyguys.com/"
-            img="/assets/fbg.png">
+            img={FbgImage.src}>
             <h5
                 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                 Software Engineer at Fly-By Guys
             </h5>
+            <Button class="mt-2"></Button>
         </Card>
 
         <Card
             href="https://verbotengut.at/"
-            img="/assets/acsc.png"
+            img={AcscImage.src}
             class="mb-2 break-inside-avoid">
             <h5
                 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
@@ -41,7 +48,7 @@
 
         <Card
             href="https://htl-villach.at/"
-            img="/assets/htl-villach.png"
+            img={HtlVillachImage.src}
             class="mb-2 break-inside-avoid">
             <h5
                 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
@@ -51,7 +58,7 @@
 
         <Card
             href="https://theater-lichterloh.com/"
-            img="/assets/lichterloh.png"
+            img={LicHTerLohImage.src}
             class="mb-2 break-inside-avoid p-[0.5rem]">
             <h5
                 class="m-[-0.5rem] mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
@@ -61,7 +68,7 @@
 
         <Card
             href="https://first.global/"
-            img="/assets/fgc2023.png"
+            img={Fgc2023Image.src}
             class="mb-2 max-w-[14rem] break-inside-avoid p-[0.5rem]">
             <h5
                 class="m-[-0.5rem] mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
