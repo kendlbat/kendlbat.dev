@@ -6,7 +6,7 @@
 </script>
 
 <div class={outerClass}>
-    <div class="flex flex-row gap-3">
+    <div class="flex flex-row flex-wrap gap-3">
         <!-- GitHub -->
         <Button
             class="bg-[#171515]"
