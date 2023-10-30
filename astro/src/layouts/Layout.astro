@@ -1,0 +1,59 @@
+---
+interface Props {
+    title: string;
+    description: string;
+    mainClass?: string;
+}
+
+import { ViewTransitions } from "astro:transitions";
+import SvelteNav from "../components/svelte/Nav.svelte";
+import SvelteFooter from "../components/svelte/Footer.svelte";
+
+const { title, description, mainClass = "m-8" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="description" content={description} />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="author" content="Tobias Kendlbacher" />
+        <meta
+            name="keywords"
+            content="Kendlbacher, Developer, Portfolio, Tobias Kendlbacher, Kendlbacher Austria, Kendlbacher HTL Villach"
+        />
+        <meta name="generator" content={Astro.generator} />
+        <title>{title}</title>
+
+        <style is:global>
+            @keyframes bounce-horiz {
+                0%,
+                100% {
+                    transform: translateX(0);
+                    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+                }
+                50% {
+                    transform: translateX(30%);
+                    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+                }
+            }
+
+            .animate-bounce-lr {
+                animation: bounce-horiz 1s infinite;
+            }
+
+            .animate-bounce-rl {
+                animation: bounce-horiz 1s infinite reverse;
+            }
+        </style>
+
+        <ViewTransitions />
+    </head>
+    <body class="bg-white dark:bg-gray-800">
+        <SvelteNav client:load activeUrl={Astro.url.pathname} />
+        <main class={mainClass}>
+            <slot />
+        </main>
+    </body>
+</html>
