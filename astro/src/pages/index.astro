@@ -27,7 +27,7 @@ import ImageCard from "@/components/astro/ImageCard.astro";
             Here are some of the things I am passionate about:
         </Heading>
         <div
-            class="inline-block columns-1 sm:columns-2 md:columns-3 lg:columns-4">
+            class="grid grid-cols-1 grid-rows-[masonry] gap-2 sm:grid-cols-2 md:grid-cols-[repeat(auto-fill,340px)]">
             <ImageCard
                 img={FbgImage}
                 alt="Fly-By Guys"
