@@ -27,7 +27,7 @@ import ImageCard from "@/components/astro/ImageCard.astro";
             Here are some of the things I am passionate about:
         </Heading>
         <div
-            class="grid grid-cols-1 grid-rows-[masonry] gap-2 sm:grid-cols-2 md:grid-cols-[repeat(auto-fill,340px)]">
+            class="grid grid-cols-1 grid-rows-[masonry] gap-4 gap-y-2 sm:grid-cols-2 md:grid-cols-[repeat(auto-fill,340px)] [&:has(:hover)>:not(:hover)]:opacity-40 [&>*:hover]:scale-[1.07] [&>*]:transition-all [&>*]:duration-300">
             <ImageCard
                 img={FbgImage}
                 alt="Fly-By Guys"
