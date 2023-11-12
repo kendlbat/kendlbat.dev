@@ -13,7 +13,8 @@ const { outerClass = "h-16" } = Astro.props;
 ---
 
 <div class={outerClass}>
-    <div class="flex h-full flex-row flex-wrap gap-2">
+    <div
+        class="flex h-full flex-row flex-wrap gap-2 [&:has(:hover)>:not(:hover)]:opacity-40 [&>*:hover]:scale-110 [&>*]:transition-all">
         <SocialGithub />
 
         <SocialLinkedin />

@@ -50,7 +50,7 @@ const { title, description, mainClass = "m-8" } = Astro.props;
 
         <ViewTransitions />
     </head>
-    <body class="bg-white dark:bg-gray-800">
+    <body class="bg-white transition-colors duration-[700] dark:bg-gray-800">
         <SvelteNav client:load activeUrl={Astro.url.pathname} />
         <main class={mainClass}>
             <slot />
