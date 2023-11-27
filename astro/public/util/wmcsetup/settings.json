@@ -11,5 +11,6 @@
     "prettier.tabWidth": 4,
     "[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode"
-    }
+    },
+    "markdown-preview-enhanced.previewTheme": "github-dark.css"
 }
