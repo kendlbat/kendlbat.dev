@@ -8,7 +8,7 @@ const allBlogPosts = await getCollection("blog");
 
 <Layout title="Blog" description="Tobias Kendlbacher's personal blog">
     <!--div class="grid grid-cols-1 grid-rows-[masonry] gap-2 sm:grid-cols-2 md:grid-cols-[repeat(auto-fill,340px)]"-->
-    <div>
+    <div class="flex flex-row flex-wrap gap-3 [&>*]:min-w-[300px]">
         {
             allBlogPosts.map((post) => (
                 <Card href={"/blog/" + post.slug}>
