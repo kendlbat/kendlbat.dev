@@ -19,4 +19,13 @@ You read correctly there: Not only does the lighting system inside the seat car 
 Of course, we tried tackling this problem like reasonable adults: _Asking nicely_  
 On our way to Hamburg, the conductor issued a statement along the lines of: "I can't do anything about that, it dims automatically.". - About one minute later (just as if the train heard us), the lights dimmed to a less eye-searing, but still rather unacceptable level of light-intensity.  
 On our way back home, we went to the train conductor again after attempting to just ignore away this reincarnation of Apollo himself, he just brushed us off by stating that the lights are not allowed to be turned down _(Dimming functionality very clearly exists, why would they have put it there if it isn't allowed to be used anyways?)_.  
-At the time of writing (about 2:00 am) just about nobody is able to sleep and I don't see that changing anytime soon.
+At the time of writing (1:30 am) just about nobody is able to sleep and I don't see that changing anytime soon.  
+**UPDATE:** At this point - he is just playing with our feelings. At precisely 2:00 am we got a fantastic light-show.
+
+Switching between:
+
+-   a dim blue light, perfect for still seeing something **and being able to sleep**
+-   the main light being off completely - with the seat-side reading lights still going strong
+-   my absolute favorite: Stadium lighting. See for yourself.
+
+![State of the art stadium lighting. At 2 am.](@assets/blog/2023-12-37c3-oebb-nightjet/20231231_015816.jpg)
