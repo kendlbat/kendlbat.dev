@@ -6,6 +6,6 @@
         "base_url": "https://matrix.kendlbat.dev:443"
     },
     "org.matrix.msc3575.proxy": {
-        "url": "https://matrix.kendlbat.dev:8443"
+        "url": "https://matrix.kendlbat.dev:443"
     }
 }
