@@ -1,1 +1,5 @@
-{"m.server": {"base_url": "matrix.kendlbat.dev:443"}}
+{
+    "m.server": {
+        "base_url": "matrix.kendlbat.dev:443"
+    }
+}
