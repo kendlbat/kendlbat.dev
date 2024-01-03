@@ -1,0 +1,15 @@
+---
+import { Button } from "flowbite-svelte";
+import MatrixIcon from "@assets/icons/matrix.svg";
+import { Image } from "astro:assets";
+---
+
+<!-- Matrix -->
+<div class="aspect-square h-full">
+    <Button
+        class="aspect-square h-full p-0 dark:border-none dark:invert"
+        href="https://matrix.to/#/@kendlbat:kendlbat.dev"
+        color="none">
+        <Image src={MatrixIcon} class="h-full w-full" alt="Matrix" />
+    </Button>
+</div>
