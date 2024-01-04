@@ -1,0 +1,27 @@
+---
+interface Props {
+    to: string;
+}
+
+const { to } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Redirecting...</title>
+        <meta http-equiv="refresh" content={`2; url=${to}`} />
+    </head>
+    <body>
+        <p>
+            Redirecting you to: <a class="text-blue-600" href={to}>{to}</a><br
+            />
+            If you are not redirected automatically, click <a
+                class="text-blue-600"
+                href={to}>here</a
+            >.
+        </p>
+    </body>
+</html>
