@@ -5,6 +5,8 @@ alias git-credential-manager='~/gcm/usr/local/bin/git-credential-manager'
 echo alias git-credential-manager='~/gcm/usr/local/bin/git-credential-manager' >> $HOME/.bashrc
 export GCM_CREDENTIAL_STORE=cache
 git config --global credential.credentialStore cache
+git config --global user.name "Tobias Kendlbacher"
+git config --global user.email "kendlbat@edu.htl-villach.at"
 $HOME/gcm/usr/local/bin/git-credential-manager configure
 git clone https://gitlab.com/htl-villach/informatik/2023-4bhif/wmc/KENDLBACHER $HOME/wmc_kendlbat
 while [ ! -f $HOME/.local/share/fonts/JetBrainsMono-Regular.ttf ]; do sleep 1; done
