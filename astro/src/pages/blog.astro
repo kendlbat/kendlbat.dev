@@ -1,7 +1,7 @@
 ---
 import { Card } from "flowbite-svelte";
 import Layout from "../layouts/Layout.astro";
-import { getEntry, getCollection } from "astro:content";
+import { getCollection } from "astro:content";
 
 const allBlogPosts = await getCollection("blog");
 ---

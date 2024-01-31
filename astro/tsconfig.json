@@ -7,5 +7,6 @@
             "@assets/*": ["src/assets/*"],
             "@layouts/*": ["src/layouts/*"]
         }
-    }
+    },
+    "exclude": ["dist"]
 }
