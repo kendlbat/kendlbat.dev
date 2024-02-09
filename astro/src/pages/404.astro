@@ -1,0 +1,17 @@
+---
+import { Card } from "flowbite-svelte";
+import Layout from "../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+
+const allBlogPosts = await getCollection("blog");
+---
+
+<Layout title="404 - Not found" description="This page does not exist">
+    <!--div class="grid grid-cols-1 grid-rows-[masonry] gap-2 sm:grid-cols-2 md:grid-cols-[repeat(auto-fill,340px)]"-->
+    <h1 class="text-xl dark:text-white">
+        The page you requested could not be found.<br />
+        <a href="/" class="cursor-pointer text-blue-600 underline"
+            >Return to home</a
+        >
+    </h1>
+</Layout>
