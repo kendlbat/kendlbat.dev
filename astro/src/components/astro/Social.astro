@@ -4,7 +4,6 @@ import SocialLinkedin from "./socialButtons/linkedin.astro";
 import SocialBuymeacoffee from "./socialButtons/buymeacoffee.astro";
 import SocialInstagram from "./socialButtons/instagram.astro";
 import SocialMastodon from "./socialButtons/mastodon.astro";
-import SocialMatrix from "./socialButtons/matrix.astro";
 
 interface Props {
     outerClass?: string;
@@ -25,7 +24,5 @@ const { outerClass = "h-16" } = Astro.props;
         <SocialInstagram />
 
         <SocialMastodon />
-
-        <SocialMatrix />
     </div>
 </div>
