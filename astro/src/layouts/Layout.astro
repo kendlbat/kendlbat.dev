@@ -55,5 +55,8 @@ const { title, description, mainClass = "m-8" } = Astro.props;
         <main class={mainClass}>
             <slot />
         </main>
+        <script is:inline>
+            fetch("https://api.kendlbat.dev/open/analytics");
+        </script>
     </body>
 </html>
