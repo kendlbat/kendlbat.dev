@@ -4,9 +4,9 @@ import Layout from "../layouts/Layout.astro";
 import { Heading, P } from "flowbite-svelte";
 import Social from "../components/astro/Social.astro";
 
-import FbgImage from "@assets/fbg.png";
 import AcscImage from "@assets/acsc.png";
 import HtlVillachImage from "@assets/htl-villach.png";
+import KelagImage from "@assets/kelag.svg";
 import LicHTerLohImage from "@assets/lichterloh.png";
 import Fgc2023Image from "@assets/fgc2023.png";
 import FruehwarnungImage from "@assets/fruehwarnung.png";
@@ -20,7 +20,8 @@ import ImageCard from "@/components/astro/ImageCard.astro";
     <div>
         <Heading tag="h2">Hi there!</Heading>
         <P class="mb-6 mt-6 text-lg lg:text-xl">
-            I'm Tobias Kendlbacher and I'm a computer science student from Austria.
+            I'm Tobias Kendlbacher and I'm a computer science student from
+            Austria.
         </P>
         <Social outerClass="h-12" />
     </div>
@@ -43,6 +44,20 @@ import ImageCard from "@/components/astro/ImageCard.astro";
                     class="font-normal leading-tight text-gray-700 dark:text-gray-400">
                     2020 - Present
                 </p>
+            </ImageCard>
+
+            <ImageCard
+                href="https://kelag.at/"
+                img={KelagImage}
+                alt="Software Engineering Intern at KELAG"
+                divClass="mb-2 max-w-[14rem] break-inside-avoid p-[1rem] flex flex-col justify-content-center align-items-center">
+                <div class="m-[-1rem]">
+                    <h4
+                        class="mb-2 text-xl font-bold leading-[1.5rem] tracking-tight text-gray-900 dark:text-white">
+                        Software Engineering Intern at KELAG
+                    </h4>
+                    <p>July - August 2024</p>
+                </div>
             </ImageCard>
 
             <ImageCard
