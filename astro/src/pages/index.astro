@@ -6,9 +6,10 @@ import Social from "../components/astro/Social.astro";
 
 import AcscImage from "@assets/acsc.png";
 import HtlVillachImage from "@assets/htl-villach.png";
+import TURBOLogoImage from "@assets/TURBOlogo.jpg";
 import KelagImage from "@assets/kelag.svg";
 import LicHTerLohImage from "@assets/lichterloh.png";
-import Fgc2023Image from "@assets/fgc2023.png";
+import Fgc2024Image from "@assets/fgc2024.png";
 import FruehwarnungImage from "@assets/fruehwarnung.png";
 
 import ImageCard from "@/components/astro/ImageCard.astro";
@@ -61,13 +62,12 @@ import ImageCard from "@/components/astro/ImageCard.astro";
             </ImageCard>
 
             <ImageCard
-                href="https://verbotengut.at/"
-                img={AcscImage}
-                alt="ACSC">
+                href="https://turbotheater.at/"
+                img={TURBOLogoImage}
+                alt="TURBOtheater Villach">
                 <h4
                     class="mb-2 text-xl font-bold leading-[1.5rem] tracking-tight text-gray-900 dark:text-white">
-                    2<sup>nd</sup> place at the Austrian Cyber Security Challenge
-                    2023
+                    Member of TURBOtheater Villach
                 </h4>
             </ImageCard>
 
@@ -82,6 +82,17 @@ import ImageCard from "@/components/astro/ImageCard.astro";
                         Actor at Theater LicHTerLoh
                     </h4>
                 </div>
+            </ImageCard>
+
+            <ImageCard
+                href="https://verbotengut.at/"
+                img={AcscImage}
+                alt="ACSC">
+                <h4
+                    class="mb-2 text-xl font-bold leading-[1.5rem] tracking-tight text-gray-900 dark:text-white">
+                    2<sup>nd</sup> place at the Austrian Cyber Security Challenge
+                    2023
+                </h4>
             </ImageCard>
 
             <ImageCard
@@ -100,15 +111,13 @@ import ImageCard from "@/components/astro/ImageCard.astro";
 
             <ImageCard
                 href="https://first.global/"
-                img={Fgc2023Image}
+                img={Fgc2024Image}
                 alt="FIRST Global Team Austria"
-                divClass="mb-2 max-w-[14rem] break-inside-avoid p-[0.5rem]">
-                <div class="m-[-0.5rem]">
-                    <h4
-                        class="mb-2 text-xl font-bold leading-[1.5rem] tracking-tight text-gray-900 dark:text-white">
-                        FIRST&reg; Global Challenge 2023
-                    </h4>
-                </div>
+                imgClass="object-cover h-[150px]">
+                <h4
+                    class="mb-2 text-xl font-bold leading-[1.5rem] tracking-tight text-gray-900 dark:text-white">
+                    <i>FIRST</i> Global Challenge 2023 & 2024
+                </h4>
             </ImageCard>
         </div>
     </div>
