@@ -64,7 +64,7 @@ const { frontmatter } = Astro.props;
         <SvelteNav client:load activeUrl={Astro.url.pathname} />
         <main class="m-8 md:justify-center">
             <div class="mt-4 text-lg dark:text-white">
-                <article class="prose dark:prose-invert m-auto">
+                <article class="prose dark:prose-invert max-w-2xl m-auto">
                     <Heading tag="h1" class:list={["!m-0"]}>{frontmatter.title}</Heading>
                     <p class="text-md !m-0 !mt-2 !mb-[-18px] text-gray-500 dark:text-gray-400">
                         Posted on {frontmatter.date.split("T")[0]} in {
