@@ -18,7 +18,7 @@ const allBlogPosts = await getCollection("blog");
                     <p class="font-normal leading-tight text-gray-700 dark:text-gray-400">
                         {post.data.date.toISOString().split("T")[0]}
                         {" - "}
-                        {post.data.language === "de" ? "German" : "English"}
+                        {post.data.language}
                     </p>
                 </Card>
             ))
