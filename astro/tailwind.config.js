@@ -1,3 +1,6 @@
+import flowbitePlugin from "flowbite/plugin";
+import typography from "@tailwindcss/typography";
+
 /** @type {import('tailwindcss').Config} */
 export default {
     content: [
@@ -5,7 +8,7 @@ export default {
         "./node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}",
     ],
 
-    plugins: [require('@tailwindcss/typography'), require("flowbite/plugin")],
+    plugins: [typography, flowbitePlugin],
 
     darkMode: "class",
 

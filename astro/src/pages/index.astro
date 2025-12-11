@@ -8,6 +8,7 @@ import AcscImage from "@assets/acsc.png";
 import HtlVillachImage from "@assets/htl-villach.png";
 import TURBOLogoImage from "@assets/TURBOlogo.jpg";
 import KelagImage from "@assets/kelag.svg";
+import OerkImage from "@assets/oerk.svg";
 import LicHTerLohImage from "@assets/lichterloh.png";
 import Fgc2024Image from "@assets/fgc2024.png";
 import FruehwarnungImage from "@assets/fruehwarnung.png";
@@ -17,12 +18,11 @@ import ImageCard from "@/components/astro/ImageCard.astro";
 
 <Layout
     title="Home"
-    description="Tobias Kendlbacher - Software Developer - Student @ HTL Villach">
+    description="Tobias Kendlbacher - Software Developer">
     <div>
         <Heading tag="h2">Hi there!</Heading>
         <P class="mb-6 mt-6 text-lg lg:text-xl">
-            I'm Tobias Kendlbacher and I'm a computer science student from
-            Austria.
+            I'm Tobias Kendlbacher, a software developer from Austria.
         </P>
         <Social outerClass="h-12" />
     </div>
@@ -34,16 +34,30 @@ import ImageCard from "@/components/astro/ImageCard.astro";
         <div
             class="inline-block columns-1 sm:columns-2 md:columns-3 lg:columns-4 [&:has(:hover)>:not(:hover)]:opacity-40 [&>*:hover]:scale-[1.07] [&>*]:transition-all [&>*]:duration-300">
             <ImageCard
+                href="https://www.roteskreuz.at/"
+                img={OerkImage}
+                alt="Austrian Red Cross Logo"
+                divClass="[&>img]:p-2 [&>img]:bg-white">
+                
+                    <h4
+                        class="mb-2 text-xl font-bold leading-[1.5rem] tracking-tight text-gray-900 dark:text-white">
+                        Emergency Medical Technician (Zivildienst) at the Austrian Red Cross
+                    </h4>
+                    <p>August 2025 - April 2026</p>
+            </ImageCard>
+            
+            <ImageCard
                 href="https://htl-villach.at/"
                 img={HtlVillachImage}
-                alt="HTL Villach">
+                alt="HTL Villach"
+                divClass="[&>img]:px-2 [&>img]:pt-2 [&>img]:bg-[#ffe65d]">
                 <h4
                     class="mb-2 text-xl font-bold leading-[1.5rem] tracking-tight text-gray-900 dark:text-white">
-                    Computer Science Student at HTL Villach
+                    Computer Science graduate at HTL Villach
                 </h4>
                 <p
                     class="font-normal leading-tight text-gray-700 dark:text-gray-400">
-                    2020 - Present
+                    2020 - 2025
                 </p>
             </ImageCard>
 
