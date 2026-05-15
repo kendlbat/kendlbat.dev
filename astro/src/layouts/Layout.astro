@@ -5,15 +5,52 @@ interface Props {
     mainClass?: string;
 }
 
-import { ViewTransitions } from "astro:transitions";
+import { ClientRouter } from "astro:transitions";
 import SvelteNav from "../components/svelte/Nav.svelte";
 
 const { title, description, mainClass = "m-8" } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
     <head>
+        <script is:inline>
+            (function () {
+                function applyTheme() {
+                    try {
+                        const theme = localStorage.getItem("theme");
+                        const prefersDark =
+                            window.matchMedia &&
+                            window.matchMedia("(prefers-color-scheme: dark)")
+                                .matches;
+                        if (
+                            theme === "dark" ||
+                            (theme === null && prefersDark)
+                        ) {
+                            document.documentElement.classList.add("dark");
+                        } else {
+                            document.documentElement.classList.remove("dark");
+                        }
+                    } catch (e) {
+                        /* ignore */
+                    }
+                }
+
+                try {
+                    if (!window.__applyTheme) {
+                        window.__applyTheme = applyTheme;
+                    }
+                    // initial
+                    applyTheme();
+                    // re-apply on client-side navigation via ClientRouter events
+                    window.addEventListener("astro:click", applyTheme);
+                    window.addEventListener("astro:navigate", applyTheme);
+                    window.addEventListener("popstate", applyTheme);
+                } catch (e) {
+                    /* ignore */
+                }
+            })();
+        </script>
         <meta charset="UTF-8" />
         <meta name="description" content={description} />
         <meta name="viewport" content="width=device-width" />
@@ -48,7 +85,7 @@ const { title, description, mainClass = "m-8" } = Astro.props;
             }
         </style>
 
-        <ViewTransitions />
+        <ClientRouter />
     </head>
     <body class="bg-white transition-colors duration-[700] dark:bg-gray-800">
         <SvelteNav client:load activeUrl={Astro.url.pathname} />

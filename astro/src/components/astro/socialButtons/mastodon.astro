@@ -1,12 +1,15 @@
 ---
-import { Button } from "flowbite-svelte";
 import MastodonIcon from "@assets/icons/mastodon.svg";
 import { Image } from "astro:assets";
+import LinkButton from "../LinkButton.astro";
 ---
 
 <!-- Mastodon -->
 <div class="aspect-square h-full">
-    <Button class="h-full p-0" href="/r/mastodon" color="none">
+    <LinkButton
+        href="/r/mastodon"
+        class="block h-full p-0"
+        ariaLabel="Mastodon">
         <Image src={MastodonIcon} class="h-full w-full" alt="Mastodon" />
-    </Button>
+    </LinkButton>
 </div>

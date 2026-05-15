@@ -1,14 +1,14 @@
 ---
-import { Button } from "flowbite-svelte";
 import { LinkedinSolid } from "flowbite-svelte-icons";
+import LinkButton from "../LinkButton.astro";
 ---
 
 <!-- LinkedIn -->
 <div class="aspect-square h-full">
-    <Button
-        class="aspect-square h-full w-full bg-[#0077b5] p-0"
+    <LinkButton
         href="/r/linkedin"
-        color="none">
+        class="block flex aspect-square h-full w-full items-center justify-center bg-[#0077b5] p-0"
+        ariaLabel="LinkedIn">
         <LinkedinSolid class="aspect-square h-2/3 w-2/3 text-white" />
-    </Button>
+    </LinkButton>
 </div>

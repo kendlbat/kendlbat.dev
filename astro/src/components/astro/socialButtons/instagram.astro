@@ -1,16 +1,19 @@
 ---
-import { Button } from "flowbite-svelte";
 import InstagramIcon from "@assets/icons/instagram.svg";
 import { Image } from "astro:assets";
+import LinkButton from "../LinkButton.astro";
 ---
 
 <!-- Instagram -->
 <div class="aspect-square h-full">
-    <Button class="h-full w-full p-0" href="/r/instagram" color="none">
+    <LinkButton
+        href="/r/instagram"
+        class="block h-full w-full p-0"
+        ariaLabel="Instagram">
         <Image
             src={InstagramIcon}
             class="h-full w-full saturate-150"
             alt="Instagram"
         />
-    </Button>
+    </LinkButton>
 </div>

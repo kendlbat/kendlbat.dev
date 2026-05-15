@@ -1,29 +1,33 @@
 ---
+import { ClientRouter } from "astro:transitions";
 import { Heading } from "flowbite-svelte";
-import { ViewTransitions } from "astro:transitions";
-import SvelteNav from "../components/svelte/Nav.svelte";
 import "katex/dist/katex.min.css";
+import SvelteNav from "../components/svelte/Nav.svelte";
 
 interface Props {
     frontmatter: {
         title: string;
-        date: string;
-        language: "English" | "German";
+        date: string | Date;
+        language: string;
         image?: string;
     };
 }
 
 const { frontmatter } = Astro.props;
+const displayDate =
+    typeof frontmatter.date === "string"
+        ? frontmatter.date
+        : frontmatter.date.toISOString();
 ---
 
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
     <head>
         <meta charset="UTF-8" />
         <meta
             name="description"
             content={`Blog post on kendlbat.dev - ${
-                frontmatter.date.split("T")[0]
+                displayDate.split("T")[0]
             } - ${frontmatter.language}`}
         />
         <meta name="viewport" content="width=device-width" />
@@ -58,16 +62,19 @@ const { frontmatter } = Astro.props;
             }
         </style>
 
-        <ViewTransitions />
+        <ClientRouter />
     </head>
     <body class="bg-white dark:bg-gray-800">
         <SvelteNav client:load activeUrl={Astro.url.pathname} />
         <main class="m-8 md:justify-center">
             <div class="mt-4 text-lg dark:text-white">
-                <article class="prose dark:prose-invert max-w-2xl m-auto">
-                    <Heading tag="h1" class:list={["!m-0"]}>{frontmatter.title}</Heading>
-                    <p class="text-md !m-0 !mt-2 !mb-[-18px] text-gray-500 dark:text-gray-400">
-                        Posted on {frontmatter.date.split("T")[0]} in {
+                <article class="prose m-auto max-w-2xl dark:prose-invert">
+                    <Heading tag="h1" class:list={["!m-0"]}>
+                        {frontmatter.title}
+                    </Heading>
+                    <p
+                        class="text-md !m-0 !mb-[-18px] !mt-2 text-gray-500 dark:text-gray-400">
+                        Posted on {displayDate.split("T")[0]} in {
                             frontmatter.language
                         }
                     </p>

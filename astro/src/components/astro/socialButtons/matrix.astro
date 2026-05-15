@@ -1,15 +1,15 @@
 ---
-import { Button } from "flowbite-svelte";
 import MatrixIcon from "@assets/icons/matrix.svg";
 import { Image } from "astro:assets";
+import LinkButton from "../LinkButton.astro";
 ---
 
 <!-- Matrix -->
 <div class="aspect-square h-full">
-    <Button
-        class="aspect-square h-full p-0 dark:border-none dark:invert"
+    <LinkButton
         href="/r/matrix"
-        color="none">
+        class="block aspect-square h-full p-0 dark:border-none dark:invert"
+        ariaLabel="Matrix">
         <Image src={MatrixIcon} class="h-full w-full" alt="Matrix" />
-    </Button>
+    </LinkButton>
 </div>

@@ -1,14 +1,14 @@
 ---
-import { Button } from "flowbite-svelte";
 import { GithubSolid } from "flowbite-svelte-icons";
+import LinkButton from "../LinkButton.astro";
 ---
 
 <!-- GitHub -->
 <div class="aspect-square h-full">
-    <Button
-        class="h-full w-full bg-[#171515] p-0"
+    <LinkButton
         href="/r/github"
-        color="none">
+        class="block flex h-full w-full items-center justify-center bg-[#171515] p-0"
+        ariaLabel="GitHub">
         <GithubSolid class="h-4/5 w-4/5 text-white" />
-    </Button>
+    </LinkButton>
 </div>

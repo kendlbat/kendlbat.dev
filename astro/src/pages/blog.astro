@@ -1,26 +1,39 @@
 ---
-import { Card } from "flowbite-svelte";
-import Layout from "../layouts/Layout.astro";
 import { getCollection } from "astro:content";
 
-const allBlogPosts = (await getCollection("blog")).sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+import Layout from "../layouts/Layout.astro";
+import LinkButton from "../components/astro/LinkButton.astro";
+
+const allBlogPosts = (await getCollection("blog")).sort(
+    (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+const posts = allBlogPosts.map((p) => ({
+    id: p.id,
+    title: p.data.title,
+    date: p.data.date,
+    language: p.data.language,
+    href: `/blog/${p.id}`,
+}));
 ---
 
 <Layout title="Blog" description="Tobias Kendlbacher's personal blog">
     <!--div class="grid grid-cols-1 grid-rows-[masonry] gap-2 sm:grid-cols-2 md:grid-cols-[repeat(auto-fill,340px)]"-->
     <div class="flex flex-row flex-wrap gap-3 [&>*]:min-w-[300px]">
         {
-            allBlogPosts.map((post) => (
-                <Card href={"/blog/" + post.slug}>
+            posts.map((post) => (
+                <LinkButton
+                    href={post.href}
+                    class="mb-2 block max-w-md rounded-lg border border-gray-200 bg-white p-4 shadow hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                    ariaLabel={post.title}>
                     <h5 class="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-                        {post.data.title}
+                        {post.title}
                     </h5>
                     <p class="font-normal leading-tight text-gray-700 dark:text-gray-400">
-                        {post.data.date.toISOString().split("T")[0]}
+                        {post.date.toISOString().split("T")[0]}
                         {" - "}
-                        {post.data.language}
+                        {post.language}
                     </p>
-                </Card>
+                </LinkButton>
             ))
         }
     </div>

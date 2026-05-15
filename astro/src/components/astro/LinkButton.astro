@@ -1,0 +1,15 @@
+---
+interface Props {
+    href: string;
+    class?: string;
+    target?: string;
+    rel?: string;
+    ariaLabel?: string;
+}
+
+const { href, class: className = "", target = undefined, rel = undefined, ariaLabel = undefined } = Astro.props as Props;
+---
+
+<a href={href} class={className} target={target} rel={rel} aria-label={ariaLabel}>
+    <slot />
+</a>

@@ -1,20 +1,19 @@
 ---
-import { Button } from "flowbite-svelte";
 import BmcIcon from "@assets/icons/bmc-logo.svg";
-
 import { Image } from "astro:assets";
+import LinkButton from "../LinkButton.astro";
 ---
 
 <!-- Buy me a coffee -->
 <div class="aspect-square h-full">
-    <Button
-        class="aspect-square h-full border border-gray-600 bg-[#FFF] p-0 dark:border-none"
+    <LinkButton
         href="/r/buymeacoffee"
-        color="none">
+        class="flex aspect-square h-full items-center justify-center border border-gray-600 bg-[#FFF] p-0 dark:border-none"
+        ariaLabel="Buy me a coffee">
         <Image
             src={BmcIcon}
             class="aspect-square h-2/3 w-2/3"
             alt="Buy me a coffee"
         />
-    </Button>
+    </LinkButton>
 </div>
