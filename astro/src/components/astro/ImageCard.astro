@@ -21,7 +21,7 @@ const {
     {href}
     class={(divClass == "" ? "" : divClass + " ") +
         "mb-2 flex max-w-md break-inside-avoid flex-col divide-gray-200 rounded-lg border border-gray-200 bg-white text-gray-500 shadow-md hover:bg-gray-100 dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"}>
-    <Image src={img} {alt} class={("w-full rounded-t-lg " + imgClass).trim()} />
+    <Image src={img} {alt} class={("w-full rounded-t-lg [mask-image:linear-gradient(to_bottom,black_90%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_bottom,black_90%,transparent_100%)] " + imgClass).trim()} />
     <div class="p-4 sm:p-6">
         <slot />
     </div>
