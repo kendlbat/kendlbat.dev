@@ -5,10 +5,7 @@ import Layout from "../layouts/Layout.astro";
 <Layout title="Putzplan" description="Putzplan nach Kalenderwoche">
     <section class="mx-auto max-w-2xl p-4 text-gray-900 dark:text-gray-100">
         <h1 class="mb-3 text-3xl font-bold">Putzplan</h1>
-        <p class="mb-6 text-lg">
-            Kalenderwoche: <span id="calendar-week" class="font-semibold">...</span>
-        </p>
-        <ul id="assignments" class="list-disc space-y-2 pl-6"></ul>
+        <div id="weeks"></div>
     </section>
 
     <script is:inline>
@@ -34,19 +31,60 @@ import Layout from "../layouts/Layout.astro";
             return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
         }
 
-        const week = getIsoCalendarWeek(new Date());
-        const weekElement = document.getElementById("calendar-week");
-        const assignmentsElement = document.getElementById("assignments");
+        function getIsoWeekMonday(date) {
+            const d = new Date(
+                Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+            );
+            const day = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() - day + 1);
+            return d;
+        }
 
-        if (weekElement && assignmentsElement) {
-            weekElement.textContent = String(week);
+        function formatIsoDate(date) {
+            return date.toISOString().slice(0, 10);
+        }
 
-            for (const room of rooms) {
-                const formulaResult = (week % 3) + room.number;
-                const dutyNumber = ((formulaResult - 1) % 3) + 1;
-                const listItem = document.createElement("li");
-                listItem.textContent = `${room.number} ${room.name}: ${duties[dutyNumber]}`;
-                assignmentsElement.appendChild(listItem);
+        const weeksElement = document.getElementById("weeks");
+
+        if (weeksElement) {
+            const weekSections = [
+                { label: "Diese Woche", weekOffset: 0 },
+                { label: "Nächste Woche", weekOffset: 1 },
+            ];
+
+            for (const { label, weekOffset } of weekSections) {
+                const monday = getIsoWeekMonday(new Date());
+                monday.setUTCDate(monday.getUTCDate() + weekOffset * 7);
+                const sunday = new Date(monday);
+                sunday.setUTCDate(sunday.getUTCDate() + 6);
+                const week = getIsoCalendarWeek(monday);
+
+                const section = document.createElement("section");
+                section.className = "mb-6";
+
+                const headline = document.createElement("h2");
+                headline.className = "text-lg font-semibold";
+                headline.textContent = `${label} (Kalenderwoche ${week})`;
+                section.appendChild(headline);
+
+                const dateRange = document.createElement("p");
+                dateRange.className = "mb-2";
+                dateRange.textContent = `Montag-Sonntag (ISO 8601): ${formatIsoDate(monday)} bis ${formatIsoDate(sunday)}`;
+                section.appendChild(dateRange);
+
+                const assignmentsElement = document.createElement("ul");
+                assignmentsElement.className = "list-disc space-y-2 pl-6";
+
+                for (const room of rooms) {
+                    const formulaResult = (week % 3) + room.number;
+                    const dutyNumber = ((formulaResult - 1) % 3) + 1;
+                    const listItem = document.createElement("li");
+                    listItem.textContent = `${room.number} ${room.name}: ${duties[dutyNumber]}`;
+                    assignmentsElement.appendChild(listItem);
+                }
+
+                section.appendChild(assignmentsElement);
+                weeksElement.appendChild(section);
             }
         }
     </script>
