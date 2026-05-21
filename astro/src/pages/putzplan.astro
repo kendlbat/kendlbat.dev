@@ -40,18 +40,15 @@ import Layout from "../layouts/Layout.astro";
             return d;
         }
 
-        function formatIsoDate(date) {
-            const year = date.getUTCFullYear();
-            const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-            const day = String(date.getUTCDate()).padStart(2, "0");
-            return `${year}-${month}-${day}`;
+        function formatDate(date) {
+            return `${date.getDate()}.${date.getMonth() + 1}.`;
         }
 
         const weeksElement = document.getElementById("weeks");
 
         if (weeksElement) {
             const weekSections = [
-                { label: "Diese Woche", weekOffset: 0 },
+                { label: "Aktuelle Woche", weekOffset: 0 },
                 { label: "Nächste Woche", weekOffset: 1 },
             ];
 
@@ -72,7 +69,9 @@ import Layout from "../layouts/Layout.astro";
 
                 const dateRange = document.createElement("p");
                 dateRange.className = "mb-2";
-                dateRange.textContent = `Montag–Sonntag: ${formatIsoDate(monday)} bis ${formatIsoDate(sunday)}`;
+                dateRange.textContent = `${formatDate(monday)} - ${formatDate(
+                    sunday,
+                )}`;
                 section.appendChild(dateRange);
 
                 const assignmentsElement = document.createElement("ul");
