@@ -2,7 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout title="Putzplan" description="Putzplan nach Kalenderwoche">
+<Layout title="Putzplan" description="Putzplan nach KW">
     <section class="mx-auto max-w-2xl p-4 text-gray-900 dark:text-gray-100">
         <h1 class="mb-3 text-3xl font-bold">Putzplan</h1>
         <div id="weeks"></div>
@@ -41,7 +41,10 @@ import Layout from "../layouts/Layout.astro";
         }
 
         function formatIsoDate(date) {
-            return date.toISOString().slice(0, 10);
+            const year = date.getUTCFullYear();
+            const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+            const day = String(date.getUTCDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
         }
 
         const weeksElement = document.getElementById("weeks");
@@ -64,12 +67,12 @@ import Layout from "../layouts/Layout.astro";
 
                 const headline = document.createElement("h2");
                 headline.className = "text-lg font-semibold";
-                headline.textContent = `${label} (Kalenderwoche ${week})`;
+                headline.textContent = `${label} (KW ${week})`;
                 section.appendChild(headline);
 
                 const dateRange = document.createElement("p");
                 dateRange.className = "mb-2";
-                dateRange.textContent = `Montag–Sonntag (ISO 8601): ${formatIsoDate(monday)} bis ${formatIsoDate(sunday)}`;
+                dateRange.textContent = `Montag–Sonntag: ${formatIsoDate(monday)} bis ${formatIsoDate(sunday)}`;
                 section.appendChild(dateRange);
 
                 const assignmentsElement = document.createElement("ul");
