@@ -6,6 +6,7 @@
         artist_name: string;
         release_name?: string;
         image_url?: string;
+        img_class: string;
     }
 
     let track: Track | null = null;
@@ -35,9 +36,7 @@
                 {
                     credentials: "omit",
                     headers: {
-                        "User-Agent":
-                            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:152.0) Gecko/20100101 Firefox/152.0",
-                        Accept: "*/*",
+                        Accept: "application/json",
                     },
                 },
             );
@@ -45,11 +44,14 @@
             const listens = data?.payload?.listens;
             if (listens && listens.length > 0) {
                 const meta = listens[0].track_metadata;
+                const imageUrl = getImageUrl(meta.additional_info);
                 track = {
                     track_name: meta.track_name,
                     artist_name: meta.artist_name,
                     release_name: meta.release_name,
-                    image_url: getImageUrl(meta.additional_info),
+                    image_url: imageUrl,
+                    img_class:
+                        "w-full rounded-t-lg" + (imageUrl ? "" : " hidden"),
                 };
             } else {
                 track = null;
@@ -63,7 +65,7 @@
 
     onMount(() => {
         fetchNowPlaying();
-        intervalId = setInterval(fetchNowPlaying, 30000);
+        intervalId = setInterval(fetchNowPlaying, 10000);
     });
 
     onDestroy(() => {
@@ -74,18 +76,19 @@
 </script>
 
 {#if track}
-    <div
-        class="mb-2 flex max-w-md break-inside-avoid flex-col divide-gray-200 rounded-lg border border-gray-200 bg-white text-gray-500 shadow-md dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-        {#if track.image_url}
-            <img
-                src={track.image_url}
-                alt="{track.track_name} cover art"
-                class="w-full rounded-t-lg"
-                loading="lazy"
-                onerror={(e) => {
+    <a
+        href="https://listenbrainz.org/user/kendlbat/"
+        class="mb-2 block max-w-md break-inside-avoid flex-col divide-gray-200 rounded-lg border border-gray-200 bg-white text-gray-500 shadow-md transition-all duration-300 hover:scale-[1.05] hover:bg-gray-100 dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700">
+        <img
+            src={track.image_url || ""}
+            alt="{track.track_name} cover art"
+            class={track.img_class}
+            loading="lazy"
+            on:error={(e) => {
+                if (e?.target instanceof HTMLImageElement) {
                     e.target.style.display = "none";
-                }} />
-        {/if}
+                }
+            }} />
 
         <div class="p-4 sm:p-6">
             <div class="mb-2 flex items-center gap-2">
@@ -123,5 +126,5 @@
                 </p>
             {/if}
         </div>
-    </div>
+    </a>
 {/if}
