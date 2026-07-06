@@ -1,4 +1,6 @@
 ---
+import { twMerge } from "tailwind-merge";
+
 interface Props {
     href: string;
     class?: string;
@@ -7,9 +9,20 @@ interface Props {
     ariaLabel?: string;
 }
 
-const { href, class: className = "", target = undefined, rel = undefined, ariaLabel = undefined } = Astro.props as Props;
+const {
+    href,
+    class: className = "",
+    target = undefined,
+    rel = undefined,
+    ariaLabel = undefined,
+} = Astro.props as Props;
 ---
 
-<a href={href} class={className} target={target} rel={rel} aria-label={ariaLabel}>
+<a
+    href={href}
+    class={twMerge("rounded-lg", className)}
+    target={target}
+    rel={rel}
+    aria-label={ariaLabel}>
     <slot />
 </a>
