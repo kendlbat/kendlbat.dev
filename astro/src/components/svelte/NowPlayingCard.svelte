@@ -79,16 +79,18 @@
     <a
         href="https://listenbrainz.org/user/kendlbat/"
         class="mb-2 block max-w-md break-inside-avoid flex-col divide-gray-200 rounded-lg border border-gray-200 bg-white text-gray-500 shadow-md transition-all duration-300 hover:scale-[1.05] hover:bg-gray-100 dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700">
-        <img
-            src={track.image_url || ""}
-            alt="{track.track_name} cover art"
-            class={track.img_class}
-            loading="lazy"
-            on:error={(e) => {
-                if (e?.target instanceof HTMLImageElement) {
-                    e.target.style.display = "none";
-                }
-            }} />
+        {#key track.image_url}
+            <img
+                src={track.image_url || ""}
+                alt="{track.track_name} cover art"
+                class={track.img_class}
+                loading="lazy"
+                on:error={(e) => {
+                    if (e?.target instanceof HTMLImageElement) {
+                        e.target.style.display = "none";
+                    }
+                }} />
+        {/key}
 
         <div class="p-4 sm:p-6">
             <div class="mb-2 flex items-center gap-2">
