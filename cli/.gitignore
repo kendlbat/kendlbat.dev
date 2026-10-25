@@ -1,9 +1,6 @@
 target/
-pkg/
-pkg-node/
 Cargo.lock
-alpine-fs.json
-alpine-rootfs-flat/
-alpine-state.bin.zst
-bios/
-v86/
+public/pkg/
+public/alpine-fs.json
+public/alpine-rootfs-flat/
+public/alpine-state.bin.zst

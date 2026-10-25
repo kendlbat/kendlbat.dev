@@ -108,8 +108,6 @@ fn new_emulator(wasm_path: String, bios_dir: &str, extra: &[(&str, JsValue)]) ->
         ("bios", url(format!("{bios_dir}seabios.bin"))),
         ("vga_bios", url(format!("{bios_dir}vgabios.bin"))),
         ("filesystem", obj(&[("baseurl", "alpine-rootfs-flat/".into()), ("basefs", "alpine-fs.json".into())]).into()),
-        ("bzimage_initrd_from_filesystem", true.into()),
-        ("cmdline", "rw root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose modules=virtio_pci tsc=reliable mitigations=off console=ttyS0".into()),
         ("memory_size", (128 * 1024 * 1024).into()),
         ("autostart", true.into()),
     ]);
@@ -185,14 +183,15 @@ pub fn boot() {
     });
 }
 
-/// Node entry: cold boots the image and resolves with the saved state once zsh shows its prompt.
+/// Node entry: cold boots the image with `kernel` and resolves with the saved state once zsh shows its prompt.
+/// The kernel has 9p built in, so it mounts the root filesystem directly; `rdinit` points nowhere to skip
+/// its bundled initramfs.
 #[wasm_bindgen]
-pub fn build_state(wasm_path: String, bios_dir: &str) -> js_sys::Promise {
-    let emulator = new_emulator(wasm_path, bios_dir, &[]);
-    // docker export blanks /etc/hostname
-    on(emulator, "emulator-loaded", move |_| {
-        write_files(emulator, [("etc/hostname".to_string(), &b"kendlbat.dev\n"[..])].into_iter())
-    });
+pub fn build_state(wasm_path: String, bios_dir: &str, kernel: String) -> js_sys::Promise {
+    let emulator = new_emulator(wasm_path, bios_dir, &[
+        ("bzimage", url(kernel)),
+        ("cmdline", "rdinit=/none root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose rw tsc=reliable mitigations=off console=ttyS0".into()),
+    ]);
     js_sys::Promise::new(&mut |resolve, _| {
         let (mut output, mut saving) = (Vec::new(), false);
         on(emulator, "serial0-output-byte", move |byte| {

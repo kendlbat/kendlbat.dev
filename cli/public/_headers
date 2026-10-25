@@ -1,0 +1,11 @@
+# root filesystem files are named by their content hash, so they never change
+/alpine-rootfs-flat/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# everything else keeps its name across builds, so browsers revalidate it
+/alpine-state.bin.zst
+  Cache-Control: public, max-age=0, must-revalidate
+/alpine-fs.json
+  Cache-Control: public, max-age=0, must-revalidate
+/pkg/*
+  Cache-Control: public, max-age=0, must-revalidate

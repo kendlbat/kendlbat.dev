@@ -2,7 +2,7 @@ clear
 printf '\e[1;36m%s\e[0m\n' "$(cat /etc/motd)"
 head -n 2 ~/about.txt
 echo
-for f in ~/links/*; do printf '  \e[2m%-13s\e[0m %s\n' ${f:t} "$(cat $f)"; done
+for f in ~/links/*(N); do printf '  \e[2m%-13s\e[0m %s\n' ${f:t} "$(cat $f)"; done
 echo
 printf '  \e[1mblog\e[0m            list blog posts\n'
 printf '  \e[1mblog\e[0m <number>   read a post, images included\n'
