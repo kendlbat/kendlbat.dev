@@ -49,6 +49,9 @@ extern "C" {
     #[wasm_bindgen(method, getter)]
     fn rows(this: &Terminal) -> u32;
 
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(line: &str);
+
     #[wasm_bindgen(js_name = setTimeout)]
     fn set_timeout(f: &JsValue, ms: u32);
 
@@ -192,10 +195,22 @@ pub fn build_state(wasm_path: String, bios_dir: &str, kernel: String) -> js_sys:
         ("bzimage", url(kernel)),
         ("cmdline", "rdinit=/none root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose rw tsc=reliable mitigations=off console=ttyS0".into()),
     ]);
-    js_sys::Promise::new(&mut |resolve, _| {
-        let (mut output, mut saving) = (Vec::new(), false);
+    js_sys::Promise::new(&mut |resolve, reject| {
+        // a boot that never reaches the prompt fails the build instead of hanging it
+        let give_up = Closure::once_into_js(move || reject.call1(&JsValue::NULL, &"no zsh prompt after 10 minutes".into()));
+        set_timeout(&give_up, 10 * 60 * 1000);
+
+        let (mut output, mut line, mut saving) = (Vec::new(), Vec::new(), false);
         on(emulator, "serial0-output-byte", move |byte| {
-            output.push(byte.as_f64().unwrap() as u8);
+            let byte = byte.as_f64().unwrap() as u8;
+            // the console goes to the build log, so boot problems are visible there
+            if byte == b'\n' {
+                log(&String::from_utf8_lossy(&line));
+                line.clear();
+            } else if byte != b'\r' {
+                line.push(byte);
+            }
+            output.push(byte);
             // "╰─" starts the second line of the bira prompt
             if !saving && output.ends_with("╰─".as_bytes()) {
                 saving = true;

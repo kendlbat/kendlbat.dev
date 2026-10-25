@@ -44,7 +44,9 @@ fn main() {
     // this user can pack them, and tar records everything as owned by root
     make_owner_readable(&rootfs);
     let tar = work.join("rootfs.tar");
-    run(Command::new("tar").args(["--owner=0", "--group=0", "--numeric-owner", "-C"]).arg(&rootfs).arg("-cf").arg(&tar).arg("."));
+    // top-level names rather than ".", whose "./" prefix v86's fs2json would keep as a directory
+    let top: Vec<_> = fs::read_dir(&rootfs).unwrap().map(|e| e.unwrap().file_name()).collect();
+    run(Command::new("tar").args(["--owner=0", "--group=0", "--numeric-owner", "-C"]).arg(&rootfs).arg("-cf").arg(&tar).args(&top));
     for tool in ["fs2json.py", "copy-to-sha256.py"] {
         fetch(&format!("{V86_REPO}/tools/{tool}"), &work.join(tool));
     }
