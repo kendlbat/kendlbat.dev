@@ -12,11 +12,12 @@
     },
     "dependencies": {
         "@astrojs/check": "0.9.9",
+        "@astrojs/mdx": "^6.0.3",
         "@astrojs/sitemap": "3.7.2",
         "@astrojs/svelte": "^8.1.1",
         "@astrojs/tailwind": "^6.0.2",
         "@tailwindcss/typography": "^0.5.15",
-        "astro": "6.3.3",
+        "astro": "6.4.8",
         "astro-robots-txt": "^1.0.0",
         "flowbite": "^4.0.2",
         "flowbite-svelte": "^1.33.1",

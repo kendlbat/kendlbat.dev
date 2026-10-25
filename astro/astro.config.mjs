@@ -6,6 +6,8 @@ import { defineConfig, passthroughImageService } from "astro/config";
 
 import rehypePrettyCode from "rehype-pretty-code";
 
+import mdx from "@astrojs/mdx";
+
 // https://astro.build/config
 export default defineConfig({
     site: "https://kendlbat.dev",
@@ -21,5 +23,5 @@ export default defineConfig({
             [rehypePrettyCode, {}],
         ],
     },
-    integrations: [tailwind(), svelte(), robotsTxt(), sitemap()],
+    integrations: [tailwind(), svelte(), robotsTxt(), sitemap(), mdx()],
 });

@@ -1,0 +1,11 @@
+[package]
+name = "blog"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+pulldown-cmark = { version = "0.13.5", default-features = false }
+
+[profile.release]
+opt-level = "s"
+strip = true
