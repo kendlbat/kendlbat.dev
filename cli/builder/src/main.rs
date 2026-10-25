@@ -40,7 +40,9 @@ fn main() {
     step("root filesystem");
     let rootfs = work.join("rootfs");
     build_rootfs(work, &rootfs);
-    // apk ran without root, so ownership is fixed to root here
+    // apk ran without root: files only root could read (bin/bbsuid is 4111) get owner read so
+    // this user can pack them, and tar records everything as owned by root
+    make_owner_readable(&rootfs);
     let tar = work.join("rootfs.tar");
     run(Command::new("tar").args(["--owner=0", "--group=0", "--numeric-owner", "-C"]).arg(&rootfs).arg("-cf").arg(&tar).arg("."));
     for tool in ["fs2json.py", "copy-to-sha256.py"] {
@@ -124,6 +126,24 @@ fn build_rootfs(work: &Path, rootfs: &Path) {
     fs::copy("blog/target/i686-unknown-linux-musl/release/blog", r("usr/local/bin/blog")).unwrap();
     for docs in ["usr/share/doc", "usr/share/man"] {
         let _ = fs::remove_dir_all(r(docs));
+    }
+}
+
+fn make_owner_readable(dir: &Path) {
+    for entry in fs::read_dir(dir).unwrap() {
+        let path = entry.unwrap().path();
+        let meta = fs::symlink_metadata(&path).unwrap();
+        if meta.file_type().is_symlink() {
+            continue;
+        }
+        let extra = if meta.is_dir() { 0o700 } else { 0o400 };
+        let mode = meta.permissions().mode();
+        if mode & extra != extra {
+            fs::set_permissions(&path, fs::Permissions::from_mode(mode | extra)).unwrap();
+        }
+        if meta.is_dir() {
+            make_owner_readable(&path);
+        }
     }
 }
 

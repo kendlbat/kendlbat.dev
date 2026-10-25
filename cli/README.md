@@ -27,6 +27,6 @@ Workers & Pages, Create, Pages, Connect to Git, `kendlbat/kendlbat.dev`, then:
 - Build command: the command from Build above
 - Build output directory: `public`
 - Root directory (advanced): `cli`
-- Environment variable: `NODE_VERSION` = `22`
+- Environment variables: `NODE_VERSION` = `22`, and `SKIP_DEPENDENCY_INSTALL` = `1` (the repo root's `pnpm-lock.yaml` otherwise makes Pages run `pnpm install` in `cli/`, which has no `package.json`)
 
 Afterwards, under Settings, Build: build system version 3, and Build watch paths include `cli/*` so changes to the website don't rebuild this. Static assets only, there is no `functions/` folder or `_worker.js`.
