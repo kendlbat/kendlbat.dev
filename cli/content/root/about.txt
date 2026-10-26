@@ -1,16 +1,24 @@
 Hi there!
 I'm Tobias Kendlbacher, a software developer from Austria.
-Here's some stuff I've been up to:
+Here's some stuff I've been/am up to:
+
+Electrical- and Electronics Engineering at TU Graz
+    Currently doing my Bachelors degree
+
 Full Stack Developer at Kickscale
-May 2026 - Present
+    May 2026 - Present
+
 Emergency Medical Technician at the Austrian Red Cross
-August 2025 - April 2026 (Zivildienst)
-Ongoing as a volunteer
+    August 2025 - April 2026 (Zivildienst)
+    Ongoing as a volunteer
+
 Computer Science graduate at HTL Villach
-2020 - 2025
+    Won the "HTL Villach Award" 2025, recognizing special efforts in the public representation of the school
+
 Member of TURBOtheater Villach
 Actor at Theater LicHTerLoh
-Finalist at ACSC 2026
-2nd place at the Austrian Cyber Security Challenge
-2023
+
+1st place (Junior/2026) and 2nd place (Junior/2023) at the Austrian Cyber Security Challenge
+
 FIRST Global Challenge 2023 & 2024
+    Built a robot and represented Austria at the largest international robotics competition
