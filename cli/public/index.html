@@ -2,6 +2,8 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
+        <!-- touch-first devices without hover (phones, tablets) have no keyboard to type with; runs before anything else loads -->
+        <script>if (matchMedia("(hover: none) and (pointer: coarse)").matches) location.replace("https://m.kendlbat.dev");</script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>kendlbat.dev cli</title>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" />

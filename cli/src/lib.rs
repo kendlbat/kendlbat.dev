@@ -4,7 +4,6 @@ use wasm_bindgen::prelude::*;
 include!(concat!(env!("OUT_DIR"), "/files.rs"));
 
 const V86_CDN: &str = "https://cdn.jsdelivr.net/npm/v86@0.5.472/build/";
-const MOBILE_SITE: &str = "https://m.kendlbat.dev";
 const BIOS_CDN: &str = "https://cdn.jsdelivr.net/gh/copy/v86@cc37f35c43bf14865d74ad76879ecf9410f69eb1/bios/";
 
 #[wasm_bindgen]
@@ -54,14 +53,6 @@ extern "C" {
 
     #[wasm_bindgen(js_name = setTimeout)]
     fn set_timeout(f: &JsValue, ms: u32);
-
-    #[wasm_bindgen(js_name = matchMedia)]
-    fn match_media(query: &str) -> MediaQueryList;
-    type MediaQueryList;
-    #[wasm_bindgen(method, getter)]
-    fn matches(this: &MediaQueryList) -> bool;
-    #[wasm_bindgen(js_namespace = location)]
-    fn replace(url: &str);
 
     #[wasm_bindgen(js_namespace = document, js_name = getElementById)]
     fn element(id: &str) -> JsValue;
@@ -140,10 +131,6 @@ fn write_files<'a>(emulator: &V86, files: impl Iterator<Item = (String, &'a [u8]
 /// Browser entry: resumes the booted snapshot, adds content/ and shows the welcome screen.
 #[wasm_bindgen]
 pub fn boot() {
-    // touch-first devices without hover (phones, tablets) usually have no keyboard to type with
-    if match_media("(hover: none) and (pointer: coarse)").matches() {
-        return replace(MOBILE_SITE);
-    }
     let term: &'static Terminal = Box::leak(Box::new(Terminal::new(&obj(&[
         ("fontFamily", "'JetBrains Mono', monospace".into()),
         ("fontSize", 15.into()),
