@@ -1,4 +1,3 @@
-# the VM is 32-bit x86, a static musl binary links with the bundled lld on any host
 [build]
 target = "i686-unknown-linux-musl"
 

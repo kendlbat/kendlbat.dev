@@ -2,7 +2,6 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <!-- touch-first devices without hover (phones, tablets) have no keyboard to type with; runs before anything else loads -->
         <script>if (matchMedia("(hover: none) and (pointer: coarse)").matches) location.replace("https://m.kendlbat.dev");</script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>kendlbat.dev cli</title>
@@ -10,7 +9,6 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
         <style>
             html, body { margin: 0; height: 100%; overflow: hidden; background: #0b0f14; }
-            /* inset rather than padding: the fit addon sizes the terminal to this box's full height */
             #terminal { position: fixed; inset: 12px; }
             .xterm-viewport { scrollbar-width: thin; scrollbar-color: #2a3442 transparent; }
         </style>

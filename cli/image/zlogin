@@ -4,7 +4,6 @@ head -n 2 ~/about.txt
 echo
 for f in ~/links/*(N); do printf '  \e[2m%-13s\e[0m %s\n' ${f:t} "$(cat $f)"; done
 echo
-# commands are OSC 8 links to /#<fragment>, which the page turns into that command (see src/lib.rs)
 link() { printf '\e]8;;/#%s\e\\%b\e]8;;\e\\' "$1" "$2" }
 printf '  %s            list blog posts\n' "$(link blog '\e[1mblog\e[0m')"
 printf '  \e[1mblog\e[0m <number>   read a post, images included\n'

@@ -1,6 +1,3 @@
-//! The VM has no network, so `nowplaying` inside it asks the terminal instead: it prints OSC 5380 and waits
-//! for a newline. This side does what the website's NowPlayingCard does (ListenBrainz, then cover art),
-//! writes the card straight into the terminal and sends the newline so the command exits.
 use super::{obj, Terminal, V86};
 use js_sys::{Reflect, Uint8Array};
 use wasm_bindgen::prelude::*;
@@ -10,7 +7,6 @@ pub const OSC: u32 = 5380;
 const PROFILE: &str = "https://listenbrainz.org/user/kendlbat/";
 const PLAYING_NOW: &str = "https://api.listenbrainz.org/1/user/kendlbat/playing-now";
 const COVERART: &str = "https://coverartarchive.org/release/";
-// three requests at most, together well below the 25 s the VM side waits
 const REQUEST_TIMEOUT_MS: u32 = 6000;
 const COVER_ROWS: u32 = 10;
 
@@ -30,7 +26,6 @@ extern "C" {
 }
 
 pub async fn answer(term: &Terminal, emulator: &V86) {
-    // xterm gets the text directly, not through the tty, so newlines need their carriage return
     term.write(&card().await.replace('\n', "\r\n"));
     emulator.serial0_send("\n");
 }
@@ -48,7 +43,6 @@ async fn card() -> String {
     let mut out = String::new();
     if let Some(url) = cover_url(&meta, &artist, &track).await {
         if let Some(image) = get_bytes(&url).await {
-            // the cursor stays on the image's last row, the newline moves below it
             out += &format!("\x1b]1337;File=inline=1;size={};height={COVER_ROWS}:{}\x07\n", image.len(), base64(&image));
         }
     }
@@ -60,8 +54,6 @@ async fn card() -> String {
     out + PROFILE + "\n"
 }
 
-/// Same order as the website: the listen's own cover, a YouTube thumbnail, the Cover Art Archive by
-/// release, and a MusicBrainz search as the last resort.
 async fn cover_url(meta: &JsValue, artist: &str, track: &str) -> Option<String> {
     let info = path(meta, &["additional_info"]);
     if let Some(url) = string(&info, &["cover_art_url"]) {
@@ -97,8 +89,6 @@ fn path(value: &JsValue, keys: &[&str]) -> JsValue {
     })
 }
 
-/// A non-empty string field, without control characters: it ends up in the terminal, where those could
-/// be escape sequences.
 fn string(value: &JsValue, keys: &[&str]) -> Option<String> {
     let s: String = path(value, keys).as_string()?.chars().filter(|c| !c.is_control()).collect();
     (!s.trim().is_empty()).then_some(s)

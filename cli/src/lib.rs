@@ -116,8 +116,6 @@ fn url(u: String) -> JsValue {
     obj(&[("url", u.into())]).into()
 }
 
-/// `build_dir` holds this build's alpine-fs.json (and snapshot); the root filesystem files themselves
-/// are shared across builds because they are named by content.
 fn new_emulator(
     wasm_path: String,
     bios_dir: &str,
@@ -152,7 +150,7 @@ fn on(emulator: &V86, event: &str, f: impl FnMut(JsValue) + 'static) {
 fn write_files<'a>(emulator: &V86, files: impl Iterator<Item = (String, &'a [u8])>) {
     let fs = emulator.fs9p();
     for (path, data) in files {
-        let mut parent = 0; // root inode
+        let mut parent = 0;
         for (i, _) in path.match_indices('/') {
             let id = fs.search_path(&path[..i]).id();
             let name = path[..i].rsplit('/').next().unwrap();
@@ -166,7 +164,6 @@ fn write_files<'a>(emulator: &V86, files: impl Iterator<Item = (String, &'a [u8]
     }
 }
 
-/// Browser entry: resumes the booted snapshot in `build_dir`, adds content/ and shows the welcome screen.
 #[wasm_bindgen]
 pub fn boot(build_dir: &str) {
     let term: &'static Terminal = Box::leak(Box::new(Terminal::new(&obj(&[
@@ -186,11 +183,9 @@ pub fn boot(build_dir: &str) {
     let fit: &'static Fit = Box::leak(Box::new(Fit::new()));
     term.load_addon(fit.as_ref());
     fit.fit();
-    // xterm follows the window; the VM's tty picks the new size up at its next prompt (resize in .zshrc)
     let refit = Closure::<dyn FnMut()>::new(move || fit.fit());
     add_window_listener("resize", &refit);
     refit.forget();
-    // makes URLs clickable, and renders the inline images the in-VM blog viewer prints
     term.load_addon(WebLinks::new().as_ref());
     term.load_addon(Image::new().as_ref());
 
@@ -204,26 +199,22 @@ pub fn boot(build_dir: &str) {
         )],
     );
 
-    // xterm.js drops characters whose UTF-8 bytes arrive one write at a time (e.g. "•", "–", "„"),
-    // which is how v86's own adapter feeds it, so bytes are collected into whole characters here
     let mut pending = Vec::new();
     on(emulator, "serial0-output-byte", move |byte| {
         pending.push(byte.as_f64().unwrap() as u8);
         match std::str::from_utf8(&pending) {
             Ok(s) => term.write(s),
-            Err(e) if e.error_len().is_none() => return, // incomplete character, wait for more
+            Err(e) if e.error_len().is_none() => return,
             Err(_) => term.write(&String::from_utf8_lossy(&pending)),
         }
         pending.clear();
     });
-    // serial0_send sends one byte per UTF-16 unit, so typed text goes out as its UTF-8 bytes
     let input = Closure::<dyn FnMut(String)>::new(move |data: String| {
         emulator.serial0_send(&data.bytes().map(char::from).collect::<String>());
     });
     term.on_data(&input);
     input.forget();
 
-    // `nowplaying` in the VM asks the page for the live music status (see nowplaying.rs)
     let on_osc = Closure::<dyn FnMut(String) -> bool>::new(move |_| {
         wasm_bindgen_futures::spawn_local(nowplaying::answer(term, emulator));
         true
@@ -231,8 +222,6 @@ pub fn boot(build_dir: &str) {
     term.parser().register_osc_handler(nowplaying::OSC, &on_osc);
     on_osc.forget();
 
-    // OSC 8 links printed in the VM (the greeting's commands link to /#about etc.) stay on the page and
-    // go through the fragment commands; anything else opens in a new tab
     let on_link = Closure::<dyn FnMut(JsValue, String)>::new(move |_, uri: String| {
         if let Some(hash) = uri.strip_prefix("/#") {
             set_location_hash(hash);
@@ -240,8 +229,6 @@ pub fn boot(build_dir: &str) {
             open_window(&uri, "_blank", "noopener");
         }
     });
-    // xterm drops OSC 8 links it can't parse as absolute http(s) URLs unless this is set, which
-    // is why the handler above checks the protocol itself
     let link_handler = obj(&[("activate", on_link.into_js_value()), ("allowNonHttpProtocols", true.into())]);
     Object::assign(&term.options(), &obj(&[("linkHandler", link_handler.into())]));
 
@@ -270,8 +257,6 @@ fn location_part(part: &str) -> String {
     Reflect::get(&location(), &part.into()).ok().and_then(|v| v.as_string()).unwrap_or_default()
 }
 
-/// The command for the current fragment. The fragment is consumed (removed from the URL without a new
-/// history entry or another hashchange), so following the same link again changes the hash and runs again.
 fn take_hash_command() -> Option<String> {
     let hash = location_part("hash");
     if !hash.is_empty() {
@@ -291,8 +276,6 @@ fn run_hash_command(emulator: &V86) {
     }
 }
 
-/// The command a URL fragment stands for. Only these fixed commands are allowed, so a shared link can
-/// never type arbitrary input into a visitor's shell.
 fn hash_command(hash: &str) -> Option<String> {
     match hash.trim_start_matches('#') {
         "about" => Some("cat about.txt".into()),
@@ -333,9 +316,6 @@ mod tests {
     }
 }
 
-/// Node entry: cold boots the image with `kernel` and resolves with the saved state once zsh shows its prompt.
-/// The kernel has 9p built in, so it mounts the root filesystem directly; `rdinit` points nowhere to skip
-/// its bundled initramfs.
 #[wasm_bindgen]
 pub fn build_state(wasm_path: String, bios_dir: &str, kernel: String) -> js_sys::Promise {
     let emulator = new_emulator(wasm_path, bios_dir, "", &[
@@ -343,18 +323,14 @@ pub fn build_state(wasm_path: String, bios_dir: &str, kernel: String) -> js_sys:
         ("cmdline", "rdinit=/none root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose rw tsc=reliable mitigations=off console=ttyS0".into()),
     ]);
     js_sys::Promise::new(&mut |resolve, reject| {
-        // a boot that never reaches the prompt fails the build instead of hanging it
         let give_up = Closure::once_into_js(move || {
             reject.call1(&JsValue::NULL, &"no zsh prompt after 10 minutes".into())
         });
         set_timeout(&give_up, 10 * 60 * 1000);
 
-        // prompts seen: the first gets the cleanup command, the second one (drawn only after zsh's precmd
-        // `resize` gave up waiting for a terminal) is where the snapshot is taken
         let (mut output, mut line, mut prompts) = (Vec::new(), Vec::new(), 0);
         on(emulator, "serial0-output-byte", move |byte| {
             let byte = byte.as_f64().unwrap() as u8;
-            // the console goes to the build log, so boot problems are visible there
             if byte == b'\n' {
                 log(&String::from_utf8_lossy(&line));
                 line.clear();
@@ -362,14 +338,11 @@ pub fn build_state(wasm_path: String, bios_dir: &str, kernel: String) -> js_sys:
                 line.push(byte);
             }
             output.push(byte);
-            // "╰─" starts the second line of the bira prompt
             if output.ends_with("╰─".as_bytes()) {
                 prompts += 1;
                 if prompts == 1 {
-                    // dropping caches and filling free memory with zeros once keeps the snapshot small
                     emulator.serial0_send("sync; echo 3 > /proc/sys/vm/drop_caches; dd if=/dev/zero of=/dev/null bs=72M count=1\n");
                 } else if prompts == 2 {
-                    // a moment for zsh to finish drawing the prompt and wait for input
                     let resolve = resolve.clone();
                     let save = Closure::once_into_js(move || {
                         resolve.call1(&JsValue::NULL, &emulator.save_state())

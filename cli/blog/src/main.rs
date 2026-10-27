@@ -1,11 +1,8 @@
-//! `blog` lists the posts in ~/blog, `blog <n|file>` renders one with colours and inline images
-//! (iTerm2 image protocol, decoded by xterm.js in the browser), one screen at a time from the top.
 use pulldown_cmark::{Event, Parser, Tag, TagEnd};
 use std::io::{IsTerminal, Read, Write};
 use std::{env, fs, path::Path, path::PathBuf, process::exit, process::Command};
 
 const BLOG_DIR: &str = "/root/blog";
-// xterm.js cell size in pixels at the 15px font index.html sets, used to size images in rows
 const CELL_W: u32 = 9;
 const CELL_H: u32 = 18;
 
@@ -13,7 +10,6 @@ fn main() {
     extern "C" {
         fn signal(signum: i32, handler: usize) -> usize;
     }
-    // SAFETY: SIGPIPE (13) back to its default (0), so `blog 2 | head` exits quietly instead of panicking
     unsafe { signal(13, 0) };
 
     let mut posts: Vec<PathBuf> = fs::read_dir(BLOG_DIR).into_iter().flatten().flatten().map(|e| e.path()).collect();
@@ -24,7 +20,9 @@ fn main() {
         for (i, p) in posts.iter().enumerate() {
             let src = fs::read_to_string(p).unwrap();
             let (meta, _) = split_frontmatter(&src);
-            println!("\x1b[1;36m{:>2}\x1b[0m  \x1b[2m{}\x1b[0m  {}", i + 1, field(meta, "date"), field(meta, "title"));
+            let n = i + 1;
+            let title = format!("\x1b]8;;/#blog/{n}\x1b\\{}\x1b]8;;\x1b\\", field(meta, "title"));
+            println!("\x1b[1;36m{n:>2}\x1b[0m  \x1b[2m{}\x1b[0m  {title}", field(meta, "date"));
         }
         println!("\n\x1b[2mread one with\x1b[0m blog <number>");
         return;
@@ -54,13 +52,10 @@ fn term_size() -> (u32, u32) {
     }
     const TIOCGWINSZ: std::ffi::c_ulong = 0x5413;
     let mut ws = Winsize([0; 4]);
-    // SAFETY: TIOCGWINSZ writes a struct winsize (rows, cols, xpixel, ypixel) into ws
     let ok = unsafe { ioctl(1, TIOCGWINSZ, &mut ws) } == 0 && ws.0[0] > 0;
     if ok { (ws.0[0] as u32, ws.0[1] as u32) } else { (24, 80) }
 }
 
-/// Prints a screen, waits for a key (q quits), prints the next one. Output only ever appends,
-/// so inline images stay intact, unlike in a pager that redraws.
 fn page(text: &str, rows: u32, cols: u32) {
     let _ = Command::new("stty").args(["-icanon", "-echo"]).status();
     let mut used = 0;
@@ -85,7 +80,6 @@ fn page(text: &str, rows: u32, cols: u32) {
     let _ = Command::new("stty").args(["icanon", "echo"]).status();
 }
 
-/// Terminal rows a line takes: the image height it asks for, or its visible width wrapped at cols.
 fn line_rows(line: &str, cols: u32) -> u32 {
     if let Some(h) = line.split(";height=").nth(1).and_then(|s| s.split(|c: char| !c.is_ascii_digit()).next()) {
         return h.parse().unwrap_or(1);
@@ -102,7 +96,6 @@ fn line_rows(line: &str, cols: u32) -> u32 {
     (width as u32).div_ceil(cols).max(1)
 }
 
-/// Rows to show a PNG in: its natural size, shrunk to fit the terminal.
 fn image_rows(png: &[u8], rows: u32, cols: u32) -> u32 {
     let dim = |i: usize| png.get(i..i + 4).map_or(0, |b| u32::from_be_bytes(b.try_into().unwrap()));
     let (w, h) = (dim(16).max(1), dim(20));
@@ -172,7 +165,6 @@ fn render(md: &str, dir: &Path, rows: u32, cols: u32) -> String {
             Event::End(TagEnd::Item) if !out.ends_with('\n') => out += "\n",
             Event::Start(Tag::Image { dest_url, .. }) => {
                 in_image = true;
-                // a missing image is skipped rather than failing the whole post
                 if let Ok(data) = fs::read(dir.join(&*dest_url)) {
                     let height = image_rows(&data, rows, cols);
                     out += &format!("\x1b]1337;File=inline=1;size={};height={height}:{}\x07", data.len(), base64(&data));
@@ -226,9 +218,9 @@ mod tests {
         let mut png = vec![0; 24];
         png[16..20].copy_from_slice(&800u32.to_be_bytes());
         png[20..24].copy_from_slice(&360u32.to_be_bytes());
-        assert_eq!(image_rows(&png, 40, 120), 20); // 360px / 18px per row
-        assert_eq!(image_rows(&png, 12, 120), 10); // capped by window height
-        assert_eq!(image_rows(&png, 40, 40), 9); // capped so 800px fits 40 cols
+        assert_eq!(image_rows(&png, 40, 120), 20);
+        assert_eq!(image_rows(&png, 12, 120), 10);
+        assert_eq!(image_rows(&png, 40, 40), 9);
     }
 
     #[test]

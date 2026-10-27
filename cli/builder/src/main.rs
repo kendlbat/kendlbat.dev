@@ -1,12 +1,7 @@
-//! Builds public/ for Cloudflare Pages (x86_64 Linux, no root, no Docker): the blog viewer, the WASM glue,
-//! an Alpine root filesystem in v86's 9p format and a snapshot of it booted to the zsh prompt.
-//! Shells out to curl, tar, sha256sum, python3 and node, which the Pages build image provides.
 use std::os::unix::fs::{symlink, PermissionsExt};
 use std::{env, fs, path::Path, process::Command};
 
 const ALPINE: &str = "https://dl-cdn.alpinelinux.org/alpine/v3.21";
-// listed instead of alpine-base, which also pulls in apk-tools with its TLS and networking stack,
-// useless in a VM without a network
 const PACKAGES: &[&str] = &[
     "alpine-baselayout", "alpine-release", "busybox", "busybox-binsh", "openrc", "agetty",
     "zsh", "zsh-autosuggestions", "fastfetch", "less", "htop",
@@ -15,8 +10,6 @@ const OH_MY_ZSH: &str = "https://github.com/ohmyzsh/ohmyzsh/archive/d2b7f557ccea
 const V86_NPM: &str = "https://registry.npmjs.org/v86/-/v86-0.5.472.tgz";
 const V86_REPO: &str = "https://raw.githubusercontent.com/copy/v86/cc37f35c43bf14865d74ad76879ecf9410f69eb1";
 const WASM_BINDGEN: &str = "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.129/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl.tar.gz";
-// v86's Buildroot kernel has 9p built in, so it boots the Alpine root without an initramfs.
-// Only used to build the snapshot, visitors never download it.
 const KERNEL: &str = "https://i.copy.sh/buildroot-bzImage68.bin";
 const KERNEL_SHA256: &str = "507a759c70ab7a490a233be454d0b5b88bc667956a410b531cb4edc091e2eb1c";
 
@@ -25,12 +18,10 @@ fn main() {
     let work = Path::new("target/build");
     let _ = fs::remove_dir_all(work);
     fs::create_dir_all(work).unwrap();
-    // public/ is entirely generated, its sources are in web/
     let _ = fs::remove_dir_all("public");
     fs::create_dir_all("public").unwrap();
 
     step("blog viewer");
-    // blog/.cargo/config.toml picks the 32-bit musl target, and cargo only reads it from inside blog/
     run(Command::new("cargo").args(["build", "--release"]).current_dir("blog"));
 
     step("wasm glue");
@@ -44,11 +35,8 @@ fn main() {
     step("root filesystem");
     let rootfs = work.join("rootfs");
     build_rootfs(work, &rootfs);
-    // apk ran without root: files only root could read (e.g. setuid helpers installed as 4111) get
-    // owner read so this user can pack them, and tar records everything as owned by root
     make_owner_readable(&rootfs);
     let tar = work.join("rootfs.tar");
-    // top-level names rather than ".", whose "./" prefix v86's fs2json would keep as a directory
     let top: Vec<_> = fs::read_dir(&rootfs).unwrap().map(|e| e.unwrap().file_name()).collect();
     run(Command::new("tar").args(["--owner=0", "--group=0", "--numeric-owner", "-C"]).arg(&rootfs).arg("-cf").arg(&tar).args(&top));
     for tool in ["fs2json.py", "copy-to-sha256.py"] {
@@ -67,7 +55,6 @@ fn main() {
     fetch(KERNEL, &kernel);
     let sum = output(Command::new("sha256sum").arg(&kernel));
     assert!(sum.starts_with(KERNEL_SHA256), "kernel checksum mismatch: {sum}");
-    // node runs from public/ so the 9p paths in the glue resolve like they do in the browser
     let script = "import { V86 } from '../target/build/v86/package/build/libv86.mjs';
         import zlib from 'node:zlib'; import fs from 'node:fs';
         globalThis.V86 = V86;
@@ -78,8 +65,6 @@ fn main() {
     run(Command::new("node").args(["--input-type=module", "-e", script]).current_dir("public"));
 
     step("site");
-    // Cloudflare caches .js and .zst under a fixed URL for hours, so a deploy could pair new wasm with an
-    // old cli.js or snapshot. Everything that belongs together goes into a folder named by its content.
     let hash = output(Command::new("sh").args(["-c", "cat target/build/pkg-web/* public/alpine-fs.json public/alpine-state.bin.zst | sha256sum"]));
     let build = format!("build-{}", &hash[..12]);
     let build_dir = Path::new("public").join(&build);
@@ -94,17 +79,13 @@ fn main() {
     step(&format!("done: public/{build}"));
 }
 
-/// Alpine packages plus the setup their install scripts and the old Dockerfile did.
 fn build_rootfs(work: &Path, rootfs: &Path) {
-    // apk.static comes from the mirror's apk-tools-static package (x86_64, the build host); the mirror
-    // only keeps the current version, so its file name is looked up in the repository index
     let index = work.join("apkindex");
     fetch_tar(&format!("{ALPINE}/main/x86_64/APKINDEX.tar.gz"), &index);
     let version = package_version(&fs::read_to_string(index.join("APKINDEX")).unwrap(), "apk-tools-static");
     fetch_tar(&format!("{ALPINE}/main/x86_64/apk-tools-static-{version}.apk"), &work.join("apk-tools-static"));
     let apk = work.join("apk-tools-static/sbin/apk.static");
     fs::set_permissions(&apk, fs::Permissions::from_mode(0o755)).unwrap();
-    // --no-scripts: package scripts would need to run x86 binaries inside the root
     run(Command::new(&apk)
         .args(["--arch", "x86", "-X", &format!("{ALPINE}/main"), "-X", &format!("{ALPINE}/community")])
         .args(["--allow-untrusted", "--initdb", "--no-scripts", "--no-chown", "--no-cache", "--root"])
@@ -113,12 +94,10 @@ fn build_rootfs(work: &Path, rootfs: &Path) {
         .args(PACKAGES));
     let r = |p: &str| rootfs.join(p);
 
-    // what busybox's install script does: a link per applet
     for applet in fs::read_to_string(r("etc/busybox-paths.d/busybox")).unwrap().lines() {
         let _ = symlink("/bin/busybox", r(applet));
     }
 
-    // autologin as root on the serial console, which xterm.js is attached to
     let inittab = fs::read_to_string(r("etc/inittab")).unwrap();
     let inittab: String = inittab.lines().filter(|l| !l.contains("getty")).map(|l| format!("{l}\n")).collect();
     fs::write(r("etc/inittab"), inittab + "ttyS0::respawn:/sbin/agetty --autologin root --noissue -s ttyS0 115200 xterm-256color\n").unwrap();
@@ -131,7 +110,6 @@ fn build_rootfs(work: &Path, rootfs: &Path) {
         }
     }
 
-    // oh-my-zsh trimmed to its core and the bira theme
     fetch_tar(OH_MY_ZSH, &work.join("omz"));
     let omz = fs::read_dir(work.join("omz")).unwrap().next().unwrap().unwrap().path();
     run(Command::new("cp").arg("-r").arg(&omz).arg(r("root/.oh-my-zsh")));
@@ -175,7 +153,6 @@ fn make_owner_readable(dir: &Path) {
     }
 }
 
-/// Version of `name` in an APKINDEX, whose records are blank-line separated `P:name` / `V:version` lines.
 fn package_version(index: &str, name: &str) -> String {
     let record = index.split("\n\n").find(|r| r.lines().any(|l| l.strip_prefix("P:") == Some(name)));
     let record = record.unwrap_or_else(|| panic!("{name} not in APKINDEX"));

@@ -1,5 +1,3 @@
-// Embeds content/ as a table of (VM path, bytes) that src/lib.rs writes into the VM.
-// content/ mirrors the VM's filesystem, e.g. content/root/about.txt ends up at /root/about.txt.
 use std::{env, fs, path::Path, path::PathBuf};
 
 fn main() {
