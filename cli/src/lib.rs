@@ -3,6 +3,8 @@ use wasm_bindgen::prelude::*;
 
 include!(concat!(env!("OUT_DIR"), "/files.rs"));
 
+mod nowplaying;
+
 const V86_CDN: &str = "https://cdn.jsdelivr.net/npm/v86@0.5.472/build/";
 const BIOS_CDN: &str =
     "https://cdn.jsdelivr.net/gh/copy/v86@cc37f35c43bf14865d74ad76879ecf9410f69eb1/bios/";
@@ -40,8 +42,16 @@ extern "C" {
     fn open(this: &Terminal, element: &JsValue);
     #[wasm_bindgen(method)]
     fn write(this: &Terminal, data: &str);
+    #[wasm_bindgen(method, getter)]
+    fn options(this: &Terminal) -> Object;
     #[wasm_bindgen(method, js_name = onData)]
     fn on_data(this: &Terminal, f: &Closure<dyn FnMut(String)>);
+    #[wasm_bindgen(method, getter)]
+    fn parser(this: &Terminal) -> Parser;
+
+    type Parser;
+    #[wasm_bindgen(method, js_name = registerOscHandler)]
+    fn register_osc_handler(this: &Parser, ident: u32, f: &Closure<dyn FnMut(String) -> bool>);
     #[wasm_bindgen(method, js_name = loadAddon)]
     fn load_addon(this: &Terminal, addon: &JsValue);
     #[wasm_bindgen(method, getter)]
@@ -57,6 +67,12 @@ extern "C" {
 
     #[wasm_bindgen(js_namespace = document, js_name = getElementById)]
     fn element(id: &str) -> JsValue;
+
+    #[wasm_bindgen(js_namespace = history, js_name = replaceState)]
+    fn replace_state(data: &JsValue, unused: &str, url: &str);
+
+    #[wasm_bindgen(js_name = open)]
+    fn open_window(url: &str, target: &str, features: &str);
 
     #[wasm_bindgen(js_name = addEventListener)]
     fn add_window_listener(event: &str, f: &Closure<dyn FnMut()>);
@@ -207,10 +223,32 @@ pub fn boot(build_dir: &str) {
     term.on_data(&input);
     input.forget();
 
+    // `nowplaying` in the VM asks the page for the live music status (see nowplaying.rs)
+    let on_osc = Closure::<dyn FnMut(String) -> bool>::new(move |_| {
+        wasm_bindgen_futures::spawn_local(nowplaying::answer(term, emulator));
+        true
+    });
+    term.parser().register_osc_handler(nowplaying::OSC, &on_osc);
+    on_osc.forget();
+
+    // OSC 8 links printed in the VM (the greeting's commands link to /#about etc.) stay on the page and
+    // go through the fragment commands; anything else opens in a new tab
+    let on_link = Closure::<dyn FnMut(JsValue, String)>::new(move |_, uri: String| {
+        if let Some(hash) = uri.strip_prefix("/#") {
+            set_location_hash(hash);
+        } else if uri.starts_with("https://") || uri.starts_with("http://") {
+            open_window(&uri, "_blank", "noopener");
+        }
+    });
+    // xterm drops OSC 8 links it can't parse as absolute http(s) URLs unless this is set, which
+    // is why the handler above checks the protocol itself
+    let link_handler = obj(&[("activate", on_link.into_js_value()), ("allowNonHttpProtocols", true.into())]);
+    Object::assign(&term.options(), &obj(&[("linkHandler", link_handler.into())]));
+
     on(emulator, "emulator-loaded", move |_| {
         write_files(emulator, FILES.iter().map(|(p, d)| (p.to_string(), *d)));
 
-        let link_command = hash_command(&location_hash())
+        let link_command = take_hash_command()
             .map(|c| format!("; {c}"))
             .unwrap_or_default();
         emulator.serial0_send(&format!(
@@ -224,16 +262,31 @@ pub fn boot(build_dir: &str) {
     });
 }
 
-fn location_hash() -> String {
-    Reflect::get(&js_sys::global(), &"location".into())
-        .and_then(|location| Reflect::get(&location, &"hash".into()))
-        .ok()
-        .and_then(|hash| hash.as_string())
-        .unwrap_or_default()
+fn location() -> JsValue {
+    Reflect::get(&js_sys::global(), &"location".into()).unwrap_or_default()
+}
+
+fn location_part(part: &str) -> String {
+    Reflect::get(&location(), &part.into()).ok().and_then(|v| v.as_string()).unwrap_or_default()
+}
+
+/// The command for the current fragment. The fragment is consumed (removed from the URL without a new
+/// history entry or another hashchange), so following the same link again changes the hash and runs again.
+fn take_hash_command() -> Option<String> {
+    let hash = location_part("hash");
+    if !hash.is_empty() {
+        let url = location_part("pathname") + &location_part("search");
+        replace_state(&JsValue::NULL, "", &url);
+    }
+    hash_command(&hash)
+}
+
+fn set_location_hash(hash: &str) {
+    let _ = Reflect::set(&location(), &"hash".into(), &hash.into());
 }
 
 fn run_hash_command(emulator: &V86) {
-    if let Some(command) = hash_command(&location_hash()) {
+    if let Some(command) = take_hash_command() {
         emulator.serial0_send(&format!("{command}\n"));
     }
 }
@@ -244,6 +297,8 @@ fn hash_command(hash: &str) -> Option<String> {
     match hash.trim_start_matches('#') {
         "about" => Some("cat about.txt".into()),
         "blog" => Some("blog".into()),
+        "nowplaying" => Some("nowplaying".into()),
+        "util" => Some("ls util".into()),
         other => {
             let n = other.strip_prefix("blog/")?;
             (!n.is_empty() && n.len() <= 4 && n.bytes().all(|b| b.is_ascii_digit()))
@@ -261,6 +316,8 @@ mod tests {
         assert_eq!(hash_command("#about").as_deref(), Some("cat about.txt"));
         assert_eq!(hash_command("#blog").as_deref(), Some("blog"));
         assert_eq!(hash_command("#blog/2").as_deref(), Some("blog 2"));
+        assert_eq!(hash_command("#nowplaying").as_deref(), Some("nowplaying"));
+        assert_eq!(hash_command("#util").as_deref(), Some("ls util"));
         for rejected in [
             "",
             "#",

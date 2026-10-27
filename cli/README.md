@@ -3,7 +3,7 @@
 Linux in the browser: [v86](https://github.com/copy/v86) resumes a snapshot of a booted Alpine Linux (root filesystem over 9p, zsh, oh-my-zsh, xterm.js).
 
 - `src/` (+ `build.rs`): the Rust/WASM glue. It runs the terminal and the emulator in the browser and writes `content/` into the VM; `content/` mirrors the VM filesystem, so `content/root/about.txt` becomes `/root/about.txt`.
-- `blog/`: a Rust Markdown viewer inside the VM that shows images through xterm.js.
+- `blog/`: the VM's own tools, in Rust: `blog`, a Markdown viewer that shows images through xterm.js, and `nowplaying`, the live music status. The VM has no network, so `nowplaying` asks the page through an escape sequence (OSC 5380) and `src/nowplaying.rs` does the ListenBrainz and cover art lookup like the website's NowPlayingCard.
 - `image/`: zsh config and the login banner for the VM.
 - `builder/`: a Rust program that builds everything into `public/`: the viewer, the WASM glue, the Alpine root filesystem (with `apk.static`, no root or Docker needed) converted to v86's 9p format, and the booted snapshot (Node).
 - `web/`: `index.html` (template) and `_headers` for the site.
@@ -11,11 +11,15 @@ Linux in the browser: [v86](https://github.com/copy/v86) resumes a snapshot of a
 
 ## Links
 
-A URL fragment runs a command after the greeting, also when it changes while the page is open:
+A URL fragment runs a command after the greeting, also when it changes while the page is open. It is removed from the URL once read, so the same link works again:
 
 - `#about`: `cat about.txt`
 - `#blog`: `blog`
 - `#blog/<n>`: `blog <n>`
+- `#nowplaying`: `nowplaying`
+- `#util`: `ls util`
+
+The greeting's commands are OSC 8 terminal links to these fragments, so they can be clicked.
 
 Only these are allowed (see `hash_command` in `src/lib.rs`), so a link can't type arbitrary input into a visitor's shell.
 
