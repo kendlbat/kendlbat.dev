@@ -5,7 +5,6 @@ use std::os::unix::fs::{symlink, PermissionsExt};
 use std::{env, fs, path::Path, process::Command};
 
 const ALPINE: &str = "https://dl-cdn.alpinelinux.org/alpine/v3.21";
-const APK_STATIC: &str = "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.6/x86_64/apk.static";
 // listed instead of alpine-base, which also pulls in apk-tools with its TLS and networking stack,
 // useless in a VM without a network
 const PACKAGES: &[&str] = &[
@@ -82,8 +81,13 @@ fn main() {
 
 /// Alpine packages plus the setup their install scripts and the old Dockerfile did.
 fn build_rootfs(work: &Path, rootfs: &Path) {
-    let apk = work.join("apk.static");
-    fetch(APK_STATIC, &apk);
+    // apk.static comes from the mirror's apk-tools-static package (x86_64, the build host); the mirror
+    // only keeps the current version, so its file name is looked up in the repository index
+    let index = work.join("apkindex");
+    fetch_tar(&format!("{ALPINE}/main/x86_64/APKINDEX.tar.gz"), &index);
+    let version = package_version(&fs::read_to_string(index.join("APKINDEX")).unwrap(), "apk-tools-static");
+    fetch_tar(&format!("{ALPINE}/main/x86_64/apk-tools-static-{version}.apk"), &work.join("apk-tools-static"));
+    let apk = work.join("apk-tools-static/sbin/apk.static");
     fs::set_permissions(&apk, fs::Permissions::from_mode(0o755)).unwrap();
     // --no-scripts: package scripts would need to run x86 binaries inside the root
     run(Command::new(&apk)
@@ -154,6 +158,13 @@ fn make_owner_readable(dir: &Path) {
     }
 }
 
+/// Version of `name` in an APKINDEX, whose records are blank-line separated `P:name` / `V:version` lines.
+fn package_version(index: &str, name: &str) -> String {
+    let record = index.split("\n\n").find(|r| r.lines().any(|l| l.strip_prefix("P:") == Some(name)));
+    let record = record.unwrap_or_else(|| panic!("{name} not in APKINDEX"));
+    record.lines().find_map(|l| l.strip_prefix("V:")).unwrap().to_string()
+}
+
 fn step(name: &str) {
     println!("\n==> {name}");
 }
@@ -188,4 +199,14 @@ fn replace(path: &Path, from: &str, to: &str) {
 
 fn append(path: &Path, text: &str) {
     fs::write(path, fs::read_to_string(path).unwrap() + text).unwrap();
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn package_version_reads_apkindex_records() {
+        let index = "C:Q1abc\nP:apk-tools\nV:2.14.6-r3\n\nC:Q1def\nP:apk-tools-static\nV:2.14.6-r4\nA:x86_64\n\n";
+        assert_eq!(super::package_version(index, "apk-tools-static"), "2.14.6-r4");
+        assert_eq!(super::package_version(index, "apk-tools"), "2.14.6-r3");
+    }
 }

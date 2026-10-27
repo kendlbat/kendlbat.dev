@@ -8,6 +8,16 @@ Linux in the browser: [v86](https://github.com/copy/v86) resumes a snapshot of a
 - `builder/`: a Rust program that builds everything into `public/`: the viewer, the WASM glue, the Alpine root filesystem (with `apk.static`, no root or Docker needed) converted to v86's 9p format, and the booted snapshot (Node).
 - `public/`: the static site. `index.html` and `_headers` are sources, everything else in it is generated and gitignored.
 
+## Links
+
+A URL fragment runs a command after the greeting, also when it changes while the page is open:
+
+- `#about`: `cat about.txt`
+- `#blog`: `blog`
+- `#blog/<n>`: `blog <n>`
+
+Only these are allowed (see `hash_command` in `src/lib.rs`), so a link can't type arbitrary input into a visitor's shell.
+
 ## Build
 
 On x86_64 Linux with `curl`, `tar`, `python3` and Node 22.15 or newer (for zstd):

@@ -56,6 +56,9 @@ extern "C" {
 
     #[wasm_bindgen(js_namespace = document, js_name = getElementById)]
     fn element(id: &str) -> JsValue;
+
+    #[wasm_bindgen(js_name = addEventListener)]
+    fn add_window_listener(event: &str, f: &Closure<dyn FnMut()>);
 }
 
 #[wasm_bindgen(js_namespace = FitAddon)]
@@ -137,10 +140,13 @@ pub fn boot() {
         ("theme", obj(&[("background", "#0b0f14".into()), ("foreground", "#d6deeb".into()), ("cursor", "#22d3ee".into())]).into()),
     ]))));
     term.open(&element("terminal"));
-    let fit = Fit::new();
+    let fit: &'static Fit = Box::leak(Box::new(Fit::new()));
     term.load_addon(fit.as_ref());
-    // ponytail: sized once on load, a resize listener + stty over serial if people resize a lot
     fit.fit();
+    // xterm follows the window; the VM's tty picks the new size up at its next prompt (resize in .zshrc)
+    let refit = Closure::<dyn FnMut()>::new(move || fit.fit());
+    add_window_listener("resize", &refit);
+    refit.forget();
     // makes URLs clickable, and renders the inline images the in-VM blog viewer prints
     term.load_addon(WebLinks::new().as_ref());
     term.load_addon(Image::new().as_ref());
@@ -170,7 +176,51 @@ pub fn boot() {
         write_files(emulator, FILES.iter().map(|(p, d)| (p.to_string(), *d)));
         // the snapshot waits at a zsh prompt, so size the tty and run the login greeting again
         emulator.serial0_send(&format!("stty rows {} cols {}; . ~/.zlogin\n", term.rows(), term.cols()));
+        // links like kendlbat.dev/#blog/1 type their command at the first prompt, and in-page hash changes later
+        run_hash_command(emulator);
+        let on_hash = Closure::<dyn FnMut()>::new(move || run_hash_command(emulator));
+        add_window_listener("hashchange", &on_hash);
+        on_hash.forget();
     });
+}
+
+fn run_hash_command(emulator: &V86) {
+    let hash = Reflect::get(&js_sys::global(), &"location".into())
+        .and_then(|location| Reflect::get(&location, &"hash".into()))
+        .ok()
+        .and_then(|hash| hash.as_string())
+        .unwrap_or_default();
+    if let Some(command) = hash_command(&hash) {
+        emulator.serial0_send(&format!("{command}\n"));
+    }
+}
+
+/// The command a URL fragment stands for. Only these fixed commands are allowed, so a shared link can
+/// never type arbitrary input into a visitor's shell.
+fn hash_command(hash: &str) -> Option<String> {
+    match hash.trim_start_matches('#') {
+        "about" => Some("cat about.txt".into()),
+        "blog" => Some("blog".into()),
+        other => {
+            let n = other.strip_prefix("blog/")?;
+            (!n.is_empty() && n.len() <= 4 && n.bytes().all(|b| b.is_ascii_digit())).then(|| format!("blog {n}"))
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::hash_command;
+
+    #[test]
+    fn fragments_map_to_fixed_commands_only() {
+        assert_eq!(hash_command("#about").as_deref(), Some("cat about.txt"));
+        assert_eq!(hash_command("#blog").as_deref(), Some("blog"));
+        assert_eq!(hash_command("#blog/2").as_deref(), Some("blog 2"));
+        for rejected in ["", "#", "#blog/", "#blog/2;rm", "#blog/-1", "#blog/12345", "#rm -rf /", "#ABOUT"] {
+            assert_eq!(hash_command(rejected), None, "{rejected:?}");
+        }
+    }
 }
 
 /// Node entry: cold boots the image with `kernel` and resolves with the saved state once zsh shows its prompt.
