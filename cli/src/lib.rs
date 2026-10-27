@@ -4,7 +4,8 @@ use wasm_bindgen::prelude::*;
 include!(concat!(env!("OUT_DIR"), "/files.rs"));
 
 const V86_CDN: &str = "https://cdn.jsdelivr.net/npm/v86@0.5.472/build/";
-const BIOS_CDN: &str = "https://cdn.jsdelivr.net/gh/copy/v86@cc37f35c43bf14865d74ad76879ecf9410f69eb1/bios/";
+const BIOS_CDN: &str =
+    "https://cdn.jsdelivr.net/gh/copy/v86@cc37f35c43bf14865d74ad76879ecf9410f69eb1/bios/";
 
 #[wasm_bindgen]
 extern "C" {
@@ -101,12 +102,24 @@ fn url(u: String) -> JsValue {
 
 /// `build_dir` holds this build's alpine-fs.json (and snapshot); the root filesystem files themselves
 /// are shared across builds because they are named by content.
-fn new_emulator(wasm_path: String, bios_dir: &str, build_dir: &str, extra: &[(&str, JsValue)]) -> &'static V86 {
+fn new_emulator(
+    wasm_path: String,
+    bios_dir: &str,
+    build_dir: &str,
+    extra: &[(&str, JsValue)],
+) -> &'static V86 {
     let opts = obj(&[
         ("wasm_path", wasm_path.into()),
         ("bios", url(format!("{bios_dir}seabios.bin"))),
         ("vga_bios", url(format!("{bios_dir}vgabios.bin"))),
-        ("filesystem", obj(&[("baseurl", "alpine-rootfs-flat/".into()), ("basefs", format!("{build_dir}alpine-fs.json").into())]).into()),
+        (
+            "filesystem",
+            obj(&[
+                ("baseurl", "alpine-rootfs-flat/".into()),
+                ("basefs", format!("{build_dir}alpine-fs.json").into()),
+            ])
+            .into(),
+        ),
         ("memory_size", (128 * 1024 * 1024).into()),
         ("autostart", true.into()),
     ]);
@@ -127,7 +140,11 @@ fn write_files<'a>(emulator: &V86, files: impl Iterator<Item = (String, &'a [u8]
         for (i, _) in path.match_indices('/') {
             let id = fs.search_path(&path[..i]).id();
             let name = path[..i].rsplit('/').next().unwrap();
-            parent = if id == -1 { fs.create_directory(name, parent) } else { id };
+            parent = if id == -1 {
+                fs.create_directory(name, parent)
+            } else {
+                id
+            };
         }
         let _ = emulator.create_file(&path, &Uint8Array::from(data));
     }
@@ -139,7 +156,15 @@ pub fn boot(build_dir: &str) {
     let term: &'static Terminal = Box::leak(Box::new(Terminal::new(&obj(&[
         ("fontFamily", "'JetBrains Mono', monospace".into()),
         ("fontSize", 15.into()),
-        ("theme", obj(&[("background", "#0b0f14".into()), ("foreground", "#d6deeb".into()), ("cursor", "#22d3ee".into())]).into()),
+        (
+            "theme",
+            obj(&[
+                ("background", "#0b0f14".into()),
+                ("foreground", "#d6deeb".into()),
+                ("cursor", "#22d3ee".into()),
+            ])
+            .into(),
+        ),
     ]))));
     term.open(&element("terminal"));
     let fit: &'static Fit = Box::leak(Box::new(Fit::new()));
@@ -153,7 +178,15 @@ pub fn boot(build_dir: &str) {
     term.load_addon(WebLinks::new().as_ref());
     term.load_addon(Image::new().as_ref());
 
-    let emulator = new_emulator(format!("{V86_CDN}v86.wasm"), BIOS_CDN, build_dir, &[("initial_state", url(format!("{build_dir}alpine-state.bin.zst")))]);
+    let emulator = new_emulator(
+        format!("{V86_CDN}v86.wasm"),
+        BIOS_CDN,
+        build_dir,
+        &[(
+            "initial_state",
+            url(format!("{build_dir}alpine-state.bin.zst")),
+        )],
+    );
 
     // xterm.js drops characters whose UTF-8 bytes arrive one write at a time (e.g. "•", "–", "„"),
     // which is how v86's own adapter feeds it, so bytes are collected into whole characters here
@@ -176,23 +209,31 @@ pub fn boot(build_dir: &str) {
 
     on(emulator, "emulator-loaded", move |_| {
         write_files(emulator, FILES.iter().map(|(p, d)| (p.to_string(), *d)));
-        // the snapshot waits at a zsh prompt, so size the tty and run the login greeting again
-        emulator.serial0_send(&format!("stty rows {} cols {}; . ~/.zlogin\n", term.rows(), term.cols()));
-        // links like kendlbat.dev/#blog/1 type their command at the first prompt, and in-page hash changes later
-        run_hash_command(emulator);
+
+        let link_command = hash_command(&location_hash())
+            .map(|c| format!("; {c}"))
+            .unwrap_or_default();
+        emulator.serial0_send(&format!(
+            "stty rows {} cols {}; . ~/.zlogin{link_command}\n",
+            term.rows(),
+            term.cols()
+        ));
         let on_hash = Closure::<dyn FnMut()>::new(move || run_hash_command(emulator));
         add_window_listener("hashchange", &on_hash);
         on_hash.forget();
     });
 }
 
-fn run_hash_command(emulator: &V86) {
-    let hash = Reflect::get(&js_sys::global(), &"location".into())
+fn location_hash() -> String {
+    Reflect::get(&js_sys::global(), &"location".into())
         .and_then(|location| Reflect::get(&location, &"hash".into()))
         .ok()
         .and_then(|hash| hash.as_string())
-        .unwrap_or_default();
-    if let Some(command) = hash_command(&hash) {
+        .unwrap_or_default()
+}
+
+fn run_hash_command(emulator: &V86) {
+    if let Some(command) = hash_command(&location_hash()) {
         emulator.serial0_send(&format!("{command}\n"));
     }
 }
@@ -205,7 +246,8 @@ fn hash_command(hash: &str) -> Option<String> {
         "blog" => Some("blog".into()),
         other => {
             let n = other.strip_prefix("blog/")?;
-            (!n.is_empty() && n.len() <= 4 && n.bytes().all(|b| b.is_ascii_digit())).then(|| format!("blog {n}"))
+            (!n.is_empty() && n.len() <= 4 && n.bytes().all(|b| b.is_ascii_digit()))
+                .then(|| format!("blog {n}"))
         }
     }
 }
@@ -219,7 +261,16 @@ mod tests {
         assert_eq!(hash_command("#about").as_deref(), Some("cat about.txt"));
         assert_eq!(hash_command("#blog").as_deref(), Some("blog"));
         assert_eq!(hash_command("#blog/2").as_deref(), Some("blog 2"));
-        for rejected in ["", "#", "#blog/", "#blog/2;rm", "#blog/-1", "#blog/12345", "#rm -rf /", "#ABOUT"] {
+        for rejected in [
+            "",
+            "#",
+            "#blog/",
+            "#blog/2;rm",
+            "#blog/-1",
+            "#blog/12345",
+            "#rm -rf /",
+            "#ABOUT",
+        ] {
             assert_eq!(hash_command(rejected), None, "{rejected:?}");
         }
     }
@@ -236,10 +287,14 @@ pub fn build_state(wasm_path: String, bios_dir: &str, kernel: String) -> js_sys:
     ]);
     js_sys::Promise::new(&mut |resolve, reject| {
         // a boot that never reaches the prompt fails the build instead of hanging it
-        let give_up = Closure::once_into_js(move || reject.call1(&JsValue::NULL, &"no zsh prompt after 10 minutes".into()));
+        let give_up = Closure::once_into_js(move || {
+            reject.call1(&JsValue::NULL, &"no zsh prompt after 10 minutes".into())
+        });
         set_timeout(&give_up, 10 * 60 * 1000);
 
-        let (mut output, mut line, mut saving) = (Vec::new(), Vec::new(), false);
+        // prompts seen: the first gets the cleanup command, the second one (drawn only after zsh's precmd
+        // `resize` gave up waiting for a terminal) is where the snapshot is taken
+        let (mut output, mut line, mut prompts) = (Vec::new(), Vec::new(), 0);
         on(emulator, "serial0-output-byte", move |byte| {
             let byte = byte.as_f64().unwrap() as u8;
             // the console goes to the build log, so boot problems are visible there
@@ -251,13 +306,19 @@ pub fn build_state(wasm_path: String, bios_dir: &str, kernel: String) -> js_sys:
             }
             output.push(byte);
             // "╰─" starts the second line of the bira prompt
-            if !saving && output.ends_with("╰─".as_bytes()) {
-                saving = true;
-                // dropping caches and filling free memory with zeros once keeps the snapshot small
-                emulator.serial0_send("sync; echo 3 > /proc/sys/vm/drop_caches; dd if=/dev/zero of=/dev/null bs=72M count=1\n");
-                let resolve = resolve.clone();
-                let save = Closure::once_into_js(move || resolve.call1(&JsValue::NULL, &emulator.save_state()));
-                set_timeout(&save, 5000);
+            if output.ends_with("╰─".as_bytes()) {
+                prompts += 1;
+                if prompts == 1 {
+                    // dropping caches and filling free memory with zeros once keeps the snapshot small
+                    emulator.serial0_send("sync; echo 3 > /proc/sys/vm/drop_caches; dd if=/dev/zero of=/dev/null bs=72M count=1\n");
+                } else if prompts == 2 {
+                    // a moment for zsh to finish drawing the prompt and wait for input
+                    let resolve = resolve.clone();
+                    let save = Closure::once_into_js(move || {
+                        resolve.call1(&JsValue::NULL, &emulator.save_state())
+                    });
+                    set_timeout(&save, 1000);
+                }
             }
         });
     })
