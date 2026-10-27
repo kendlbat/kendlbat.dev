@@ -6,7 +6,12 @@ use std::{env, fs, path::Path, process::Command};
 
 const ALPINE: &str = "https://dl-cdn.alpinelinux.org/alpine/v3.21";
 const APK_STATIC: &str = "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v2.14.6/x86_64/apk.static";
-const PACKAGES: &[&str] = &["alpine-base", "agetty", "zsh", "zsh-autosuggestions", "fastfetch", "less", "htop"];
+// listed instead of alpine-base, which also pulls in apk-tools with its TLS and networking stack,
+// useless in a VM without a network
+const PACKAGES: &[&str] = &[
+    "alpine-baselayout", "alpine-release", "busybox", "busybox-binsh", "openrc", "agetty",
+    "zsh", "zsh-autosuggestions", "fastfetch", "less", "htop",
+];
 const OH_MY_ZSH: &str = "https://github.com/ohmyzsh/ohmyzsh/archive/d2b7f557cceaddb16ba89bbf8200d8a8df35c4d8.tar.gz";
 const V86_NPM: &str = "https://registry.npmjs.org/v86/-/v86-0.5.472.tgz";
 const V86_REPO: &str = "https://raw.githubusercontent.com/copy/v86/cc37f35c43bf14865d74ad76879ecf9410f69eb1";
@@ -40,8 +45,8 @@ fn main() {
     step("root filesystem");
     let rootfs = work.join("rootfs");
     build_rootfs(work, &rootfs);
-    // apk ran without root: files only root could read (bin/bbsuid is 4111) get owner read so
-    // this user can pack them, and tar records everything as owned by root
+    // apk ran without root: files only root could read (e.g. setuid helpers installed as 4111) get
+    // owner read so this user can pack them, and tar records everything as owned by root
     make_owner_readable(&rootfs);
     let tar = work.join("rootfs.tar");
     // top-level names rather than ".", whose "./" prefix v86's fs2json would keep as a directory
@@ -101,7 +106,7 @@ fn build_rootfs(work: &Path, rootfs: &Path) {
     replace(&r("etc/passwd"), "root:x:0:0:root:/root:/bin/sh", "root:x:0:0:root:/root:/bin/zsh");
     append(&r("etc/shells"), "/bin/zsh\n");
     fs::write(r("etc/hostname"), "kendlbat.dev\n").unwrap();
-    for (level, services) in [("sysinit", &["devfs", "dmesg", "mdev"][..]), ("boot", &["sysctl", "hostname", "bootmisc"]), ("shutdown", &["killprocs"])] {
+    for (level, services) in [("sysinit", &["devfs", "dmesg"][..]), ("boot", &["sysctl", "hostname", "bootmisc"]), ("shutdown", &["killprocs"])] {
         for service in services {
             symlink(format!("/etc/init.d/{service}"), r(&format!("etc/runlevels/{level}/{service}"))).unwrap();
         }
@@ -141,7 +146,7 @@ fn make_owner_readable(dir: &Path) {
         let extra = if meta.is_dir() { 0o700 } else { 0o400 };
         let mode = meta.permissions().mode();
         if mode & extra != extra {
-            fs::set_permissions(&path, fs::Permissions::from_mode(mode | extra)).unwrap();
+            fs::set_permissions(&path, fs::Permissions::from_mode(mode | extra)).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
         }
         if meta.is_dir() {
             make_owner_readable(&path);
@@ -165,7 +170,7 @@ fn output(cmd: &mut Command) -> String {
 }
 
 fn fetch(url: &str, dest: &Path) {
-    run(Command::new("curl").args(["-fsSL", "--retry", "3", "-o"]).arg(dest).arg(url));
+    run(Command::new("curl").args(["-fsSL", "--retry", "3", "--retry-all-errors", "-o"]).arg(dest).arg(url));
 }
 
 fn fetch_tar(url: &str, dir: &Path) {
