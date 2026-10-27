@@ -1,6 +1,3 @@
 target/
 Cargo.lock
-public/pkg/
-public/alpine-fs.json
-public/alpine-rootfs-flat/
-public/alpine-state.bin.zst
+public/

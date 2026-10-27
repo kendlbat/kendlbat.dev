@@ -25,9 +25,9 @@ fn main() {
     let work = Path::new("target/build");
     let _ = fs::remove_dir_all(work);
     fs::create_dir_all(work).unwrap();
-    for generated in ["public/pkg", "public/alpine-rootfs-flat", "public/alpine-fs.json", "public/alpine-state.bin.zst"] {
-        let _ = fs::remove_dir_all(generated).or_else(|_| fs::remove_file(generated));
-    }
+    // public/ is entirely generated, its sources are in web/
+    let _ = fs::remove_dir_all("public");
+    fs::create_dir_all("public").unwrap();
 
     step("blog viewer");
     // blog/.cargo/config.toml picks the 32-bit musl target, and cargo only reads it from inside blog/
@@ -37,7 +37,7 @@ fn main() {
     run(Command::new("cargo").args(["build", "--release", "--target", "wasm32-unknown-unknown"]));
     fetch_tar(WASM_BINDGEN, &work.join("wasm-bindgen"));
     let wasm_bindgen = work.join("wasm-bindgen/wasm-bindgen-0.2.129-x86_64-unknown-linux-musl/wasm-bindgen");
-    for (target, out) in [("web", "public/pkg"), ("nodejs", "target/build/pkg-node")] {
+    for (target, out) in [("web", "target/build/pkg-web"), ("nodejs", "target/build/pkg-node")] {
         run(Command::new(&wasm_bindgen).args(["--target", target, "--no-typescript", "--out-dir", out, "target/wasm32-unknown-unknown/release/cli.wasm"]));
     }
 
@@ -76,7 +76,22 @@ fn main() {
         fs.writeFileSync('alpine-state.bin.zst', zlib.zstdCompressSync(state, { params: { [zlib.constants.ZSTD_c_compressionLevel]: 19 } }));
         process.exit();";
     run(Command::new("node").args(["--input-type=module", "-e", script]).current_dir("public"));
-    step("done");
+
+    step("site");
+    // Cloudflare caches .js and .zst under a fixed URL for hours, so a deploy could pair new wasm with an
+    // old cli.js or snapshot. Everything that belongs together goes into a folder named by its content.
+    let hash = output(Command::new("sh").args(["-c", "cat target/build/pkg-web/* public/alpine-fs.json public/alpine-state.bin.zst | sha256sum"]));
+    let build = format!("build-{}", &hash[..12]);
+    let build_dir = Path::new("public").join(&build);
+    fs::rename(work.join("pkg-web"), &build_dir).unwrap();
+    for file in ["alpine-fs.json", "alpine-state.bin.zst"] {
+        fs::rename(Path::new("public").join(file), build_dir.join(file)).unwrap();
+    }
+    let index = fs::read_to_string("web/index.html").unwrap();
+    assert!(index.contains("{{build}}"), "web/index.html has no {{{{build}}}} placeholder");
+    fs::write("public/index.html", index.replace("{{build}}", &build)).unwrap();
+    fs::copy("web/_headers", "public/_headers").unwrap();
+    step(&format!("done: public/{build}"));
 }
 
 /// Alpine packages plus the setup their install scripts and the old Dockerfile did.

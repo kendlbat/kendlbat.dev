@@ -6,7 +6,8 @@ Linux in the browser: [v86](https://github.com/copy/v86) resumes a snapshot of a
 - `blog/`: a Rust Markdown viewer inside the VM that shows images through xterm.js.
 - `image/`: zsh config and the login banner for the VM.
 - `builder/`: a Rust program that builds everything into `public/`: the viewer, the WASM glue, the Alpine root filesystem (with `apk.static`, no root or Docker needed) converted to v86's 9p format, and the booted snapshot (Node).
-- `public/`: the static site. `index.html` and `_headers` are sources, everything else in it is generated and gitignored.
+- `web/`: `index.html` (template) and `_headers` for the site.
+- `public/`: the generated static site, gitignored. The wasm glue, filesystem index and snapshot go into `build-<content hash>/`, which `index.html` points at, so a deploy never pairs new files with old ones that Cloudflare still has cached under the same URL.
 
 ## Links
 

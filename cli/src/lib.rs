@@ -99,12 +99,14 @@ fn url(u: String) -> JsValue {
     obj(&[("url", u.into())]).into()
 }
 
-fn new_emulator(wasm_path: String, bios_dir: &str, extra: &[(&str, JsValue)]) -> &'static V86 {
+/// `build_dir` holds this build's alpine-fs.json (and snapshot); the root filesystem files themselves
+/// are shared across builds because they are named by content.
+fn new_emulator(wasm_path: String, bios_dir: &str, build_dir: &str, extra: &[(&str, JsValue)]) -> &'static V86 {
     let opts = obj(&[
         ("wasm_path", wasm_path.into()),
         ("bios", url(format!("{bios_dir}seabios.bin"))),
         ("vga_bios", url(format!("{bios_dir}vgabios.bin"))),
-        ("filesystem", obj(&[("baseurl", "alpine-rootfs-flat/".into()), ("basefs", "alpine-fs.json".into())]).into()),
+        ("filesystem", obj(&[("baseurl", "alpine-rootfs-flat/".into()), ("basefs", format!("{build_dir}alpine-fs.json").into())]).into()),
         ("memory_size", (128 * 1024 * 1024).into()),
         ("autostart", true.into()),
     ]);
@@ -131,9 +133,9 @@ fn write_files<'a>(emulator: &V86, files: impl Iterator<Item = (String, &'a [u8]
     }
 }
 
-/// Browser entry: resumes the booted snapshot, adds content/ and shows the welcome screen.
+/// Browser entry: resumes the booted snapshot in `build_dir`, adds content/ and shows the welcome screen.
 #[wasm_bindgen]
-pub fn boot() {
+pub fn boot(build_dir: &str) {
     let term: &'static Terminal = Box::leak(Box::new(Terminal::new(&obj(&[
         ("fontFamily", "'JetBrains Mono', monospace".into()),
         ("fontSize", 15.into()),
@@ -151,7 +153,7 @@ pub fn boot() {
     term.load_addon(WebLinks::new().as_ref());
     term.load_addon(Image::new().as_ref());
 
-    let emulator = new_emulator(format!("{V86_CDN}v86.wasm"), BIOS_CDN, &[("initial_state", url("alpine-state.bin.zst".into()))]);
+    let emulator = new_emulator(format!("{V86_CDN}v86.wasm"), BIOS_CDN, build_dir, &[("initial_state", url(format!("{build_dir}alpine-state.bin.zst")))]);
 
     // xterm.js drops characters whose UTF-8 bytes arrive one write at a time (e.g. "•", "–", "„"),
     // which is how v86's own adapter feeds it, so bytes are collected into whole characters here
@@ -228,7 +230,7 @@ mod tests {
 /// its bundled initramfs.
 #[wasm_bindgen]
 pub fn build_state(wasm_path: String, bios_dir: &str, kernel: String) -> js_sys::Promise {
-    let emulator = new_emulator(wasm_path, bios_dir, &[
+    let emulator = new_emulator(wasm_path, bios_dir, "", &[
         ("bzimage", url(kernel)),
         ("cmdline", "rdinit=/none root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose rw tsc=reliable mitigations=off console=ttyS0".into()),
     ]);
