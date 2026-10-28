@@ -3,6 +3,8 @@ use wasm_bindgen::prelude::*;
 
 include!(concat!(env!("OUT_DIR"), "/files.rs"));
 
+mod browser;
+mod download;
 mod nowplaying;
 
 const V86_CDN: &str = "https://cdn.jsdelivr.net/npm/v86@0.5.472/build/";
@@ -18,6 +20,12 @@ extern "C" {
     fn add_listener(this: &V86, event: &str, f: &Closure<dyn FnMut(JsValue)>);
     #[wasm_bindgen(method)]
     fn serial0_send(this: &V86, text: &str);
+    #[wasm_bindgen(method, getter)]
+    fn bus(this: &V86) -> Bus;
+
+    type Bus;
+    #[wasm_bindgen(method)]
+    fn send(this: &Bus, event: &str, data: &JsValue);
     #[wasm_bindgen(method)]
     fn save_state(this: &V86) -> js_sys::Promise;
     #[wasm_bindgen(method)]
@@ -46,12 +54,6 @@ extern "C" {
     fn options(this: &Terminal) -> Object;
     #[wasm_bindgen(method, js_name = onData)]
     fn on_data(this: &Terminal, f: &Closure<dyn FnMut(String)>);
-    #[wasm_bindgen(method, getter)]
-    fn parser(this: &Terminal) -> Parser;
-
-    type Parser;
-    #[wasm_bindgen(method, js_name = registerOscHandler)]
-    fn register_osc_handler(this: &Parser, ident: u32, f: &Closure<dyn FnMut(String) -> bool>);
     #[wasm_bindgen(method, js_name = loadAddon)]
     fn load_addon(this: &Terminal, addon: &JsValue);
     #[wasm_bindgen(method, getter)]
@@ -136,6 +138,7 @@ fn new_emulator(
             .into(),
         ),
         ("memory_size", (128 * 1024 * 1024).into()),
+        ("virtio_console", true.into()),
         ("autostart", true.into()),
     ]);
     Object::assign(&opts, &obj(extra));
@@ -184,9 +187,6 @@ pub fn boot(build_dir: &str) {
     let fit: &'static Fit = Box::leak(Box::new(Fit::new()));
     term.load_addon(fit.as_ref());
     fit.fit();
-    let refit = Closure::<dyn FnMut()>::new(move || fit.fit());
-    add_window_listener("resize", &refit);
-    refit.forget();
     term.load_addon(WebLinks::new().as_ref());
     term.load_addon(Image::new().as_ref());
 
@@ -217,12 +217,17 @@ pub fn boot(build_dir: &str) {
     term.on_data(&input);
     input.forget();
 
-    let on_osc = Closure::<dyn FnMut(String) -> bool>::new(move |_| {
-        wasm_bindgen_futures::spawn_local(nowplaying::answer(term, emulator));
-        true
+    let refit = Closure::<dyn FnMut()>::new(move || {
+        fit.fit();
+        browser::send_size(emulator, term.rows(), term.cols());
     });
-    term.parser().register_osc_handler(nowplaying::OSC, &on_osc);
-    on_osc.forget();
+    add_window_listener("resize", &refit);
+    refit.forget();
+
+    let mut inbox = Vec::new();
+    on(emulator, "virtio-console0-output-bytes", move |chunk| {
+        browser::on_bytes(emulator, &mut inbox, &Uint8Array::new(&chunk).to_vec())
+    });
 
     let on_link = Closure::<dyn FnMut(JsValue, String)>::new(move |_, uri: String| {
         if let Some(command) = path_command(&uri) {

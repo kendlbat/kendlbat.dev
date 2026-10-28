@@ -4,7 +4,3 @@ DISABLE_AUTO_UPDATE=true
 plugins=()
 source $ZSH/oh-my-zsh.sh
 source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-autoload -Uz add-zsh-hook
-_sync_size() { resize >/dev/null }
-add-zsh-hook precmd _sync_size

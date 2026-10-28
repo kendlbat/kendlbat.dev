@@ -1,3 +1,4 @@
+use blog::base64;
 use pulldown_cmark::{Event, Parser, Tag, TagEnd};
 use std::io::{IsTerminal, Read, Write};
 use std::{env, fs, path::Path, path::PathBuf, process::exit, process::Command};
@@ -187,28 +188,10 @@ fn render(md: &str, dir: &Path, rows: u32, cols: u32) -> String {
     out
 }
 
-fn base64(data: &[u8]) -> String {
-    const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = String::with_capacity(data.len().div_ceil(3) * 4);
-    for chunk in data.chunks(3) {
-        let n = chunk.iter().enumerate().fold(0u32, |n, (i, b)| n | (*b as u32) << (16 - 8 * i));
-        for i in 0..4 {
-            out.push(if i <= chunk.len() { ALPHABET[(n >> (18 - 6 * i) & 63) as usize] as char } else { '=' });
-        }
-    }
-    out
-}
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn base64_matches_rfc4648() {
-        for (input, expected) in [("", ""), ("f", "Zg=="), ("fo", "Zm8="), ("foo", "Zm9v"), ("foobar", "Zm9vYmFy")] {
-            assert_eq!(base64(input.as_bytes()), expected);
-        }
-    }
 
     #[test]
     fn rows_for_text_and_images() {

@@ -100,7 +100,7 @@ fn build_rootfs(work: &Path, rootfs: &Path) {
 
     let inittab = fs::read_to_string(r("etc/inittab")).unwrap();
     let inittab: String = inittab.lines().filter(|l| !l.contains("getty")).map(|l| format!("{l}\n")).collect();
-    fs::write(r("etc/inittab"), inittab + "ttyS0::respawn:/sbin/agetty --autologin root --noissue -s ttyS0 115200 xterm-256color\n").unwrap();
+    fs::write(r("etc/inittab"), inittab + "ttyS0::respawn:/sbin/agetty --autologin root --noissue -s ttyS0 115200 xterm-256color\n::respawn:/usr/local/bin/browserd\n").unwrap();
     replace(&r("etc/passwd"), "root:x:0:0:root:/root:/bin/sh", "root:x:0:0:root:/root:/bin/zsh");
     append(&r("etc/shells"), "/bin/zsh\n");
     fs::write(r("etc/hostname"), "kendlbat.dev\n").unwrap();
@@ -127,7 +127,7 @@ fn build_rootfs(work: &Path, rootfs: &Path) {
         fs::copy(src, r(dst)).unwrap();
     }
     fs::write(r("root/.hushlogin"), "").unwrap();
-    for tool in ["blog", "nowplaying", "putzplan"] {
+    for tool in ["blog", "browserd", "download", "nowplaying", "putzplan"] {
         fs::copy(format!("blog/target/i686-unknown-linux-musl/release/{tool}"), r(&format!("usr/local/bin/{tool}"))).unwrap();
     }
     for docs in ["usr/share/doc", "usr/share/man"] {

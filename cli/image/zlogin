@@ -9,7 +9,6 @@ printf '  %s            list blog posts\n' "$(link blog '\e[1mblog\e[0m')"
 printf '  \e[1mblog\e[0m <number>   read a post, images included\n'
 printf '  %s   what I have been up to\n' "$(link about '\e[1mcat\e[0m about.txt')"
 printf '  %s      what I am listening to\n' "$(link nowplaying '\e[1mnowplaying\e[0m')"
-printf '  %s        Putzplan nach KW\n' "$(link putzplan '\e[1mputzplan\e[0m')"
 printf '  %s         setup scripts\n' "$(link util '\e[1mls\e[0m util')"
 unfunction link
 echo

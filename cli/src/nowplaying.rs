@@ -1,14 +1,18 @@
-use super::{obj, Terminal, V86};
+use super::obj;
 use js_sys::{Reflect, Uint8Array};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 
-pub const OSC: u32 = 5380;
 const PROFILE: &str = "https://listenbrainz.org/user/kendlbat/";
 const PLAYING_NOW: &str = "https://api.listenbrainz.org/1/user/kendlbat/playing-now";
 const COVERART: &str = "https://coverartarchive.org/release/";
 const REQUEST_TIMEOUT_MS: u32 = 6000;
 const COVER_ROWS: u32 = 10;
+const CACHE_MS: f64 = 10_000.0;
+
+thread_local! {
+    static CACHE: std::cell::RefCell<Option<(f64, String)>> = const { std::cell::RefCell::new(None) };
+}
 
 #[wasm_bindgen]
 extern "C" {
@@ -25,12 +29,17 @@ extern "C" {
     fn array_buffer(this: &Response) -> js_sys::Promise;
 }
 
-pub async fn answer(term: &Terminal, emulator: &V86) {
-    term.write(&card().await.replace('\n', "\r\n"));
-    emulator.serial0_send("\n");
+pub async fn card() -> String {
+    let now = js_sys::Date::now();
+    if let Some(card) = CACHE.with_borrow(|c| c.as_ref().filter(|(at, _)| now - at < CACHE_MS).map(|(_, card)| card.clone())) {
+        return card;
+    }
+    let card = fresh_card().await;
+    CACHE.set(Some((now, card.clone())));
+    card
 }
 
-async fn card() -> String {
+async fn fresh_card() -> String {
     let Some(data) = get_json(PLAYING_NOW).await else {
         return "Couldn't reach ListenBrainz.\n".into();
     };
