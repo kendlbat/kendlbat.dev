@@ -119,6 +119,7 @@ fn url(u: String) -> JsValue {
 fn new_emulator(
     wasm_path: String,
     bios_dir: &str,
+    site_dir: &str,
     build_dir: &str,
     extra: &[(&str, JsValue)],
 ) -> &'static V86 {
@@ -129,7 +130,7 @@ fn new_emulator(
         (
             "filesystem",
             obj(&[
-                ("baseurl", "alpine-rootfs-flat/".into()),
+                ("baseurl", format!("{site_dir}alpine-rootfs-flat/").into()),
                 ("basefs", format!("{build_dir}alpine-fs.json").into()),
             ])
             .into(),
@@ -192,6 +193,7 @@ pub fn boot(build_dir: &str) {
     let emulator = new_emulator(
         format!("{V86_CDN}v86.wasm"),
         BIOS_CDN,
+        "/",
         build_dir,
         &[(
             "initial_state",
@@ -223,8 +225,8 @@ pub fn boot(build_dir: &str) {
     on_osc.forget();
 
     let on_link = Closure::<dyn FnMut(JsValue, String)>::new(move |_, uri: String| {
-        if let Some(hash) = uri.strip_prefix("/#") {
-            set_location_hash(hash);
+        if let Some(command) = path_command(&uri) {
+            emulator.serial0_send(&format!("{command}\n"));
         } else if uri.starts_with("https://") || uri.starts_with("http://") {
             open_window(&uri, "_blank", "noopener");
         }
@@ -235,17 +237,16 @@ pub fn boot(build_dir: &str) {
     on(emulator, "emulator-loaded", move |_| {
         write_files(emulator, FILES.iter().map(|(p, d)| (p.to_string(), *d)));
 
-        let link_command = take_hash_command()
+        let link_command = take_path_command()
             .map(|c| format!("; {c}"))
             .unwrap_or_default();
+        let now = (js_sys::Date::now() / 1000.0) as u64;
+        let tz = posix_tz(-js_sys::Date::new_0().get_timezone_offset() as i64);
         emulator.serial0_send(&format!(
-            "stty rows {} cols {}; . ~/.zlogin{link_command}\n",
+            "date -s @{now} >/dev/null; export TZ={tz}; stty rows {} cols {}; . ~/.zlogin{link_command}\n",
             term.rows(),
             term.cols()
         ));
-        let on_hash = Closure::<dyn FnMut()>::new(move || run_hash_command(emulator));
-        add_window_listener("hashchange", &on_hash);
-        on_hash.forget();
     });
 }
 
@@ -257,30 +258,26 @@ fn location_part(part: &str) -> String {
     Reflect::get(&location(), &part.into()).ok().and_then(|v| v.as_string()).unwrap_or_default()
 }
 
-fn take_hash_command() -> Option<String> {
-    let hash = location_part("hash");
-    if !hash.is_empty() {
-        let url = location_part("pathname") + &location_part("search");
-        replace_state(&JsValue::NULL, "", &url);
+fn take_path_command() -> Option<String> {
+    let path = location_part("pathname");
+    if path != "/" {
+        replace_state(&JsValue::NULL, "", &format!("/{}", location_part("search")));
     }
-    hash_command(&hash)
+    path_command(&path)
 }
 
-fn set_location_hash(hash: &str) {
-    let _ = Reflect::set(&location(), &"hash".into(), &hash.into());
+fn posix_tz(utc_offset_minutes: i64) -> String {
+    let sign = if utc_offset_minutes >= 0 { '-' } else { '+' };
+    let minutes = utc_offset_minutes.abs();
+    format!("LOCAL{sign}{:02}:{:02}", minutes / 60, minutes % 60)
 }
 
-fn run_hash_command(emulator: &V86) {
-    if let Some(command) = take_hash_command() {
-        emulator.serial0_send(&format!("{command}\n"));
-    }
-}
-
-fn hash_command(hash: &str) -> Option<String> {
-    match hash.trim_start_matches('#') {
+fn path_command(path: &str) -> Option<String> {
+    match path.strip_prefix('/')?.trim_end_matches('/') {
         "about" => Some("cat about.txt".into()),
         "blog" => Some("blog".into()),
         "nowplaying" => Some("nowplaying".into()),
+        "putzplan" => Some("putzplan".into()),
         "util" => Some("ls util".into()),
         other => {
             let n = other.strip_prefix("blog/")?;
@@ -292,33 +289,45 @@ fn hash_command(hash: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::hash_command;
+    use super::{path_command, posix_tz};
 
     #[test]
-    fn fragments_map_to_fixed_commands_only() {
-        assert_eq!(hash_command("#about").as_deref(), Some("cat about.txt"));
-        assert_eq!(hash_command("#blog").as_deref(), Some("blog"));
-        assert_eq!(hash_command("#blog/2").as_deref(), Some("blog 2"));
-        assert_eq!(hash_command("#nowplaying").as_deref(), Some("nowplaying"));
-        assert_eq!(hash_command("#util").as_deref(), Some("ls util"));
+    fn posix_tz_inverts_the_sign() {
+        assert_eq!(posix_tz(60), "LOCAL-01:00");
+        assert_eq!(posix_tz(120), "LOCAL-02:00");
+        assert_eq!(posix_tz(0), "LOCAL-00:00");
+        assert_eq!(posix_tz(-330), "LOCAL+05:30");
+    }
+
+    #[test]
+    fn paths_map_to_fixed_commands_only() {
+        assert_eq!(path_command("/about").as_deref(), Some("cat about.txt"));
+        assert_eq!(path_command("/about/").as_deref(), Some("cat about.txt"));
+        assert_eq!(path_command("/blog").as_deref(), Some("blog"));
+        assert_eq!(path_command("/blog/2").as_deref(), Some("blog 2"));
+        assert_eq!(path_command("/nowplaying").as_deref(), Some("nowplaying"));
+        assert_eq!(path_command("/putzplan").as_deref(), Some("putzplan"));
+        assert_eq!(path_command("/util").as_deref(), Some("ls util"));
         for rejected in [
             "",
-            "#",
-            "#blog/",
-            "#blog/2;rm",
-            "#blog/-1",
-            "#blog/12345",
-            "#rm -rf /",
-            "#ABOUT",
+            "/",
+            "about",
+            "/blog/x",
+            "/blog/2;rm",
+            "/blog/-1",
+            "/blog/12345",
+            "/rm -rf /",
+            "/ABOUT",
+            "/#about",
         ] {
-            assert_eq!(hash_command(rejected), None, "{rejected:?}");
+            assert_eq!(path_command(rejected), None, "{rejected:?}");
         }
     }
 }
 
 #[wasm_bindgen]
 pub fn build_state(wasm_path: String, bios_dir: &str, kernel: String) -> js_sys::Promise {
-    let emulator = new_emulator(wasm_path, bios_dir, "", &[
+    let emulator = new_emulator(wasm_path, bios_dir, "", "", &[
         ("bzimage", url(kernel)),
         ("cmdline", "rdinit=/none root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose rw tsc=reliable mitigations=off console=ttyS0".into()),
     ]);

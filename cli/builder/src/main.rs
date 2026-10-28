@@ -127,7 +127,7 @@ fn build_rootfs(work: &Path, rootfs: &Path) {
         fs::copy(src, r(dst)).unwrap();
     }
     fs::write(r("root/.hushlogin"), "").unwrap();
-    for tool in ["blog", "nowplaying"] {
+    for tool in ["blog", "nowplaying", "putzplan"] {
         fs::copy(format!("blog/target/i686-unknown-linux-musl/release/{tool}"), r(&format!("usr/local/bin/{tool}"))).unwrap();
     }
     for docs in ["usr/share/doc", "usr/share/man"] {

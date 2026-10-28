@@ -21,7 +21,7 @@ fn main() {
             let src = fs::read_to_string(p).unwrap();
             let (meta, _) = split_frontmatter(&src);
             let n = i + 1;
-            let title = format!("\x1b]8;;/#blog/{n}\x1b\\{}\x1b]8;;\x1b\\", field(meta, "title"));
+            let title = format!("\x1b]8;;/blog/{n}\x1b\\{}\x1b]8;;\x1b\\", field(meta, "title"));
             println!("\x1b[1;36m{n:>2}\x1b[0m  \x1b[2m{}\x1b[0m  {title}", field(meta, "date"));
         }
         println!("\n\x1b[2mread one with\x1b[0m blog <number>");
