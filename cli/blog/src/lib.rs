@@ -15,6 +15,7 @@ pub fn base64(data: &[u8]) -> String {
 pub const DOWNLOAD: u8 = 1;
 pub const NOWPLAYING: u8 = 2;
 pub const RESIZE: u8 = 3;
+pub const RECEIVED: u8 = 4;
 
 pub fn write_frame(out: &mut impl Write, kind: u8, name: &str, data: &[u8]) -> io::Result<()> {
     let mut frame = Vec::with_capacity(9 + name.len() + data.len());

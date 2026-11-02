@@ -1,9 +1,24 @@
 use super::{download, nowplaying, V86};
 use js_sys::Uint8Array;
+use std::cell::RefCell;
+use std::collections::VecDeque;
 
 const DOWNLOAD: u8 = 1;
 const NOWPLAYING: u8 = 2;
 const RESIZE: u8 = 3;
+const RECEIVED: u8 = 4;
+const PIECE: usize = 2048;
+
+#[derive(Default)]
+struct Outbox {
+    pending: VecDeque<u8>,
+    sent: u64,
+    received: u64,
+}
+
+thread_local! {
+    static OUTBOX: RefCell<Outbox> = RefCell::new(Outbox::default());
+}
 
 pub fn send_size(emulator: &V86, rows: u32, cols: u32) {
     let size = [(rows as u16).to_le_bytes(), (cols as u16).to_le_bytes()].concat();
@@ -11,7 +26,22 @@ pub fn send_size(emulator: &V86, rows: u32, cols: u32) {
 }
 
 fn send(emulator: &V86, frame: &[u8]) {
-    emulator.bus().send("virtio-console0-input-bytes", &Uint8Array::from(frame));
+    OUTBOX.with_borrow_mut(|outbox| outbox.pending.extend(frame));
+    pump(emulator);
+}
+
+fn pump(emulator: &V86) {
+    let piece = OUTBOX.with_borrow_mut(|outbox| {
+        if outbox.sent != outbox.received || outbox.pending.is_empty() {
+            return None;
+        }
+        let piece: Vec<u8> = outbox.pending.drain(..outbox.pending.len().min(PIECE)).collect();
+        outbox.sent += piece.len() as u64;
+        Some(piece)
+    });
+    if let Some(piece) = piece {
+        emulator.bus().send("virtio-console0-input-bytes", &Uint8Array::from(&piece[..]));
+    }
 }
 
 pub fn on_bytes(emulator: &'static V86, inbox: &mut Vec<u8>, chunk: &[u8]) {
@@ -20,6 +50,10 @@ pub fn on_bytes(emulator: &'static V86, inbox: &mut Vec<u8>, chunk: &[u8]) {
         inbox.drain(..used);
         match kind {
             DOWNLOAD => download::save(&name, &data),
+            RECEIVED if data.len() == 8 => {
+                OUTBOX.with_borrow_mut(|outbox| outbox.received = u64::from_le_bytes(data[..8].try_into().unwrap()));
+                pump(emulator);
+            }
             NOWPLAYING => wasm_bindgen_futures::spawn_local(async move {
                 let card = nowplaying::card().await;
                 send(emulator, &frame(NOWPLAYING, "", card.as_bytes()));

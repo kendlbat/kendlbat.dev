@@ -1,7 +1,7 @@
-use blog::{read_frame, write_frame, DOWNLOAD, NOWPLAYING, RESIZE};
+use blog::{read_frame, write_frame, DOWNLOAD, NOWPLAYING, RECEIVED, RESIZE};
 use std::ffi::{c_char, c_ulong, CString};
 use std::fs::{self, File, OpenOptions};
-use std::io::Write;
+use std::io::{self, Read, Write};
 use std::os::fd::AsRawFd;
 use std::os::unix::fs::OpenOptionsExt;
 use std::path::Path;
@@ -34,9 +34,10 @@ fn main() {
     make_raw(&console);
     let to_page = Arc::new(Mutex::new(console.try_clone().unwrap()));
 
+    let page_for_acks = to_page.clone();
     let (replies, reply) = mpsc::channel();
     thread::spawn(move || {
-        let mut console = console;
+        let mut console = Acknowledged { console, page: page_for_acks, total: 0 };
         while let Ok((kind, _, data)) = read_frame(&mut console) {
             match kind {
                 NOWPLAYING => {
@@ -67,6 +68,21 @@ fn main() {
     });
 
     watch_downloads(&to_page);
+}
+
+struct Acknowledged {
+    console: File,
+    page: Arc<Mutex<File>>,
+    total: u64,
+}
+
+impl Read for Acknowledged {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        let n = self.console.read(buffer)?;
+        self.total += n as u64;
+        write_frame(&mut *self.page.lock().unwrap(), RECEIVED, "", &self.total.to_le_bytes())?;
+        Ok(n)
+    }
 }
 
 fn watch_downloads(page: &Mutex<File>) {

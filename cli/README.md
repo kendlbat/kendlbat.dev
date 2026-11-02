@@ -24,7 +24,7 @@ Only these are allowed (see `path_command` in `src/lib.rs`), so a link can't typ
 
 ## /dev/browser
 
-The VM has no network. `browserd`, started by init, connects it to the page over a virtio console (`/dev/hvc0`, raw mode, frames of kind byte, length-prefixed name and data):
+The VM has no network. `browserd`, started by init, connects it to the page over a virtio console (`/dev/hvc0`, raw mode, frames of kind byte, length-prefixed name and data). v86 copies each message from the page into a single guest receive buffer of one page and drops what doesn't fit, so the page sends at most 2 KB at a time and waits until `browserd` acknowledges the running byte count before sending more:
 
 - `/dev/browser/downloads/` is a spool directory: a file written there is downloaded by the browser under its name once no process has it open anymore, then removed. `download [-f FILE] [-o NAME]` writes into it (as `.NAME.part`, renamed when complete).
 - `/dev/browser/nowplaying` is a named pipe: reading it asks the page, which looks up ListenBrainz and the cover art like the website's NowPlayingCard (`src/nowplaying.rs`, cached for 10 s). `nowplaying` reads it.
