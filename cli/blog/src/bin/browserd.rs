@@ -1,4 +1,4 @@
-use blog::{read_frame, write_frame, DOWNLOAD, NOWPLAYING, RECEIVED, RESIZE};
+use blog::{read_frame, write_frame, CTF, DOWNLOAD, NOWPLAYING, RECEIVED, RESIZE};
 use std::ffi::{c_char, c_ulong, CString};
 use std::fs::{self, File, OpenOptions};
 use std::io::{self, Read, Write};
@@ -10,6 +10,7 @@ use std::thread;
 use std::time::Duration;
 
 const DOWNLOADS: &str = "/dev/browser/downloads";
+const CTF_REQUESTS: &str = "/dev/browser/ctf";
 const NOWPLAYING_PIPE: &str = "/dev/browser/nowplaying";
 const CONSOLE: &str = "/dev/hvc0";
 const TERMINAL: &str = "/dev/ttyS0";
@@ -28,6 +29,7 @@ extern "C" {
 
 fn main() {
     fs::create_dir_all(DOWNLOADS).expect(DOWNLOADS);
+    fs::create_dir_all(CTF_REQUESTS).expect(CTF_REQUESTS);
     let pipe = CString::new(NOWPLAYING_PIPE).unwrap();
     unsafe { mkfifo(pipe.as_ptr(), 0o666) };
     let console = OpenOptions::new().read(true).write(true).custom_flags(O_NOCTTY).open(CONSOLE).expect(CONSOLE);
@@ -38,11 +40,12 @@ fn main() {
     let (replies, reply) = mpsc::channel();
     thread::spawn(move || {
         let mut console = Acknowledged { console, page: page_for_acks, total: 0 };
-        while let Ok((kind, _, data)) = read_frame(&mut console) {
+        while let Ok((kind, name, data)) = read_frame(&mut console) {
             match kind {
                 NOWPLAYING => {
                     let _ = replies.send(data);
                 }
+                CTF => save_bundle(&name, &data),
                 RESIZE if data.len() == 4 => {
                     set_size(u16::from_le_bytes([data[0], data[1]]), u16::from_le_bytes([data[2], data[3]]))
                 }
@@ -67,7 +70,7 @@ fn main() {
         }
     });
 
-    watch_downloads(&to_page);
+    watch_spools(&to_page);
 }
 
 struct Acknowledged {
@@ -85,8 +88,17 @@ impl Read for Acknowledged {
     }
 }
 
-fn watch_downloads(page: &Mutex<File>) {
+fn watch_spools(page: &Mutex<File>) {
     loop {
+        for file in fs::read_dir(CTF_REQUESTS).into_iter().flatten().flatten() {
+            let name = file.file_name().to_string_lossy().into_owned();
+            if let Some(challenge) = name.strip_suffix(".key").filter(|_| !name.starts_with('.')) {
+                if let Ok(key) = fs::read(file.path()) {
+                    let _ = fs::remove_file(file.path());
+                    let _ = write_frame(&mut *page.lock().unwrap(), CTF, challenge, &key);
+                }
+            }
+        }
         for file in fs::read_dir(DOWNLOADS).into_iter().flatten().flatten() {
             let name = file.file_name().to_string_lossy().into_owned();
             if !name.starts_with('.') && !open_anywhere(&file.path()) {
@@ -111,6 +123,11 @@ fn send_download(page: &Mutex<File>, name: &str) {
         let _ = write_frame(&mut *page.lock().unwrap(), DOWNLOAD, name, &data);
         let _ = fs::remove_file(&path);
     }
+}
+
+fn save_bundle(challenge: &str, data: &[u8]) {
+    let part = format!("{CTF_REQUESTS}/.{challenge}.part");
+    let _ = fs::write(&part, data).and_then(|_| fs::rename(&part, format!("{CTF_REQUESTS}/{challenge}.tgz")));
 }
 
 fn make_raw(tty: &File) {

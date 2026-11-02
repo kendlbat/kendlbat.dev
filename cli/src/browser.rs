@@ -1,4 +1,4 @@
-use super::{download, nowplaying, V86};
+use super::{ctf, download, nowplaying, V86};
 use js_sys::Uint8Array;
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -7,6 +7,7 @@ const DOWNLOAD: u8 = 1;
 const NOWPLAYING: u8 = 2;
 const RESIZE: u8 = 3;
 const RECEIVED: u8 = 4;
+const CTF: u8 = 5;
 const PIECE: usize = 2048;
 
 #[derive(Default)]
@@ -57,6 +58,10 @@ pub fn on_bytes(emulator: &'static V86, inbox: &mut Vec<u8>, chunk: &[u8]) {
             NOWPLAYING => wasm_bindgen_futures::spawn_local(async move {
                 let card = nowplaying::card().await;
                 send(emulator, &frame(NOWPLAYING, "", card.as_bytes()));
+            }),
+            CTF => wasm_bindgen_futures::spawn_local(async move {
+                let bundle = ctf::bundle(&name, &data).await;
+                send(emulator, &frame(CTF, &name, &bundle));
             }),
             _ => {}
         }

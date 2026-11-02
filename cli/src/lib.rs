@@ -4,6 +4,7 @@ use wasm_bindgen::prelude::*;
 include!(concat!(env!("OUT_DIR"), "/files.rs"));
 
 mod browser;
+mod ctf;
 mod download;
 mod nowplaying;
 

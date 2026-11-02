@@ -3,7 +3,7 @@
 Linux in the browser: [v86](https://github.com/copy/v86) resumes a snapshot of a booted Alpine Linux (root filesystem over 9p, zsh, oh-my-zsh, xterm.js).
 
 - `src/` (+ `build.rs`): the Rust/WASM glue. It runs the terminal and the emulator in the browser and writes `content/` into the VM; `content/` mirrors the VM filesystem, so `content/root/about.txt` becomes `/root/about.txt`.
-- `blog/`: the VM's own tools, in Rust: `blog`, a Markdown viewer that shows images through xterm.js, `putzplan`, the cleaning rota by calendar week, `download`, `nowplaying`, and `browserd`, which provides `/dev/browser` (below).
+- `blog/`: the VM's own tools, in Rust: `blog`, a Markdown viewer that shows images through xterm.js, `putzplan`, the cleaning rota by calendar week, `download`, `nowplaying`, `ctf`, and `browserd`, which provides `/dev/browser` (below).
 - `image/`: zsh config and the login banner for the VM.
 - `builder/`: a Rust program that builds everything into `public/`: the viewer, the WASM glue, the Alpine root filesystem (with `apk.static`, no root or Docker needed) converted to v86's 9p format, and the booted snapshot (Node).
 - `web/`: `index.html` (template) and `_headers` for the site.
@@ -28,6 +28,7 @@ The VM has no network. `browserd`, started by init, connects it to the page over
 
 - `/dev/browser/downloads/` is a spool directory: a file written there is downloaded by the browser under its name once no process has it open anymore, then removed. `download [-f FILE] [-o NAME]` writes into it (as `.NAME.part`, renamed when complete).
 - `/dev/browser/nowplaying` is a named pipe: reading it asks the page, which looks up ListenBrainz and the cover art like the website's NowPlayingCard (`src/nowplaying.rs`, cached for 10 s). `nowplaying` reads it.
+- `/dev/browser/ctf/` holds CTF requests: `ctf CHALLENGE KEY` writes `CHALLENGE.key`, the page fetches `https://ctf.kendlbat.dev/<sha256(CHALLENGE\nKEY)>.tgz` (`src/ctf.rs`) and `browserd` writes it back as `CHALLENGE.tgz` (empty if not found), which `ctf` unpacks into `~/ctf/CHALLENGE`. The challenges live in the private `kendlbat/kendlbat-dev-ctf` repo, see its README.
 - Window size changes arrive as resize frames; `browserd` sets them on `/dev/ttyS0` with `TIOCSWINSZ`, so programs get `SIGWINCH` and redraw while running.
 
 ## Build

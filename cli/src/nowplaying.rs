@@ -117,7 +117,7 @@ async fn get_json(url: &str) -> Option<JsValue> {
     JsFuture::from(get(url).await?.json()).await.ok()
 }
 
-async fn get_bytes(url: &str) -> Option<Vec<u8>> {
+pub async fn get_bytes(url: &str) -> Option<Vec<u8>> {
     let buffer = JsFuture::from(get(url).await?.array_buffer()).await.ok()?;
     Some(Uint8Array::new(&buffer).to_vec())
 }
