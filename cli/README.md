@@ -16,6 +16,7 @@ A path runs a command after the greeting, for example `kendlbat.dev/blog/2`. The
 - `/about`: `cat about.txt`
 - `/blog`: `blog`
 - `/blog/<n>`: `blog <n>`
+- `/ctf/<challenge>/<key>`: `ctf <challenge> <key>` (letters, digits, `-` and `_` only)
 - `/nowplaying`: `nowplaying`
 - `/putzplan`: `putzplan`
 - `/util`: `ls util`

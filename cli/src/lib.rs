@@ -285,6 +285,13 @@ fn path_command(path: &str) -> Option<String> {
         "nowplaying" => Some("nowplaying".into()),
         "putzplan" => Some("putzplan".into()),
         "util" => Some("ls util".into()),
+        other if other.starts_with("ctf/") => {
+            let (name, key) = other["ctf/".len()..].split_once('/')?;
+            let plain = |s: &str| {
+                !s.is_empty() && s.len() <= 64 && s.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+            };
+            (plain(name) && plain(key)).then(|| format!("ctf {name} {key}"))
+        }
         other => {
             let n = other.strip_prefix("blog/")?;
             (!n.is_empty() && n.len() <= 4 && n.bytes().all(|b| b.is_ascii_digit()))
@@ -314,6 +321,8 @@ mod tests {
         assert_eq!(path_command("/nowplaying").as_deref(), Some("nowplaying"));
         assert_eq!(path_command("/putzplan").as_deref(), Some("putzplan"));
         assert_eq!(path_command("/util").as_deref(), Some("ls util"));
+        assert_eq!(path_command("/ctf/vault/a4420bb1").as_deref(), Some("ctf vault a4420bb1"));
+        assert_eq!(path_command("/ctf/vault/a4420bb1/").as_deref(), Some("ctf vault a4420bb1"));
         for rejected in [
             "",
             "/",
@@ -325,6 +334,14 @@ mod tests {
             "/rm -rf /",
             "/ABOUT",
             "/#about",
+            "/ctf",
+            "/ctf/vault",
+            "/ctf/vault/",
+            "/ctf//key",
+            "/ctf/vault/key/extra",
+            "/ctf/vault/key;rm",
+            "/ctf/vault/key%20x",
+            "/ctf/../key",
         ] {
             assert_eq!(path_command(rejected), None, "{rejected:?}");
         }
